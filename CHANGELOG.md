@@ -20,3 +20,7 @@
 ## 1.0.0
 
 - Initial commit, first version. { 'commit' : '094c691' }
+
+## 2.0.0
+
+- Fusion of all configs into a single repository. { 'commit' : '6f5f045b' }

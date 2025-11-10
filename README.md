@@ -1,7 +1,6 @@
 # Unified Dev Configs
 
 **One repo to hold all my dev environment configs — past, present, evolving.**  
-Exploratory prototypes built in hackathons and daily engineering work, consolidated into a single, reproducible setup.
 
 ## Why
 - Centralise historical configs into a single evolving environment

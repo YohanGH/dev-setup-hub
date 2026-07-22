@@ -1,0 +1,96 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         .--.    No           #
+#    .gitignore                                          |o_o |    Pain        #
+#                                                        |:_/ |     No         #
+#    By: YohanGH <YohanGH@proton.me>                    //    ''     Code      #
+#                                                      (|     | )              #
+#    Created: 2026/07/22 by YohanGH                    '__   _/_               #
+#                                                     (___)=(___)              #
+#                                                                              #
+# **************************************************************************** #
+
+# ============================================================================ #
+#  Secrets & credentials                                                       #
+# ============================================================================ #
+*.pem
+*.key
+*.crt
+*.cer
+*.p12
+*.pfx
+*.gpg
+*.asc
+id_rsa
+id_rsa.*
+id_ed25519
+id_ed25519.*
+*.ppk
+known_hosts
+authorized_keys
+
+# Environment / dotenv
+.env
+.env.*
+*.env
+.envrc
+secrets.*
+*secret*
+*credentials*
+*.token
+.netrc
+
+# Cloud / infra credentials
+.aws/
+.ssh/
+.gnupg/
+*.tfstate
+*.tfstate.*
+.terraform/
+
+# ============================================================================ #
+#  OS generated files                                                          #
+# ============================================================================ #
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ============================================================================ #
+#  Editor / tooling                                                            #
+# ============================================================================ #
+*.swp
+*.swo
+*.swn
+*~
+.vim/backups/
+.netrwhist
+*.bak
+*.tmp
+*.log
+.idea/
+.vscode/
+
+# ============================================================================ #
+#  Language / build artefacts                                                  #
+# ============================================================================ #
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+node_modules/
+dist/
+build/
+
+# ============================================================================ #
+#  Obsidian workspace state (garde les notes, ignore l'etat local)             #
+# ============================================================================ #
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/cache
+.trash/

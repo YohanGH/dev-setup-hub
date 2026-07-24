@@ -55,5 +55,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `halo init`. Opacity is now `f64` for clean TOML round-tripping. The graphical
   settings window (egui, live preview) builds on these APIs and is deferred
   (needs a desktop session).
+- **Phase 13** — per-sensor scheduler in `halo-core`: `SensorIntervals` gives
+  each sensor its own cadence (CPU 250 ms, memory 2 s, disk 5 s, network 1 s,
+  temperature 2 s). `Monitor` refreshes only what is due and returns a cached
+  `Sample`, so sampling at the display rate no longer re-reads every sensor —
+  fewer wakeups, lower CPU. `Monitor::with_intervals` allows custom cadences.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

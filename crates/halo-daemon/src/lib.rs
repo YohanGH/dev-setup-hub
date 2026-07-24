@@ -53,3 +53,16 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
 
     Ok(())
 }
+
+/// Launch the windowed overlay (Roadmap Phase 2).
+///
+/// This drives the `winit` event loop and therefore blocks the calling thread,
+/// which must be the process main thread on macOS. It is deliberately not
+/// `async`.
+///
+/// # Errors
+/// Propagates any error from creating the event loop, window or hotkey manager.
+#[cfg(feature = "overlay")]
+pub fn run_overlay(config: Config) -> anyhow::Result<()> {
+    halo_ui::overlay::run(config).map_err(|err| anyhow::anyhow!("overlay error: {err}"))
+}

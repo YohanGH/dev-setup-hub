@@ -21,5 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   loop printing `CPU/RAM/DISK/TEMP` each tick with clean Ctrl-C shutdown and
   structured `tracing` logs. Byte/rate/temperature formatting helpers in
   `halo-ui::format`; `Theme::by_name` lookup.
+- **Phase 2** — windowed overlay backend (`halo-ui::overlay`, feature `overlay`):
+  a transparent, borderless, always-on-top, click-through `winit` window anchored
+  to the configured corner, with a global hotkey (`Ctrl+Alt+H`) to toggle
+  visibility and `Esc` to quit. Exposed as `halo overlay`. Off by default so the
+  terminal HUD and CI stay windowing-free.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

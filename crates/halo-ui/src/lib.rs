@@ -6,6 +6,7 @@
 //! overlay (Phase 2+) implements the same trait so the rest of Halo depends only
 //! on [`Overlay`], never on a windowing toolkit.
 
+pub mod anim;
 pub mod format;
 pub mod widget;
 

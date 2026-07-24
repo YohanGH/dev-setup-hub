@@ -36,5 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   independent CPU, RAM, swap, disk, network, temperature, GPU (placeholder) and
   clock widgets, a `by_id` registry and `render_line` composer. The HUD line and
   `TextOverlay` are now built from an ordered widget set.
+- **Phase 8** — seven built-in themes (minimal, cyberpunk, terminal, glass,
+  nord, oled, monochrome) with `Color::rgba`, `themes::builtins()` and
+  `themes::names()`.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

@@ -1,0 +1,25 @@
+[package]
+name = "halo-cli"
+description = "Command-line entry point for the Halo HUD (`halo` binary)."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "halo"
+path = "src/main.rs"
+
+[dependencies]
+halo-config.workspace = true
+halo-daemon.workspace = true
+clap.workspace = true
+anyhow.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+[lints]
+workspace = true

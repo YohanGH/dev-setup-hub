@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest an idea or widget for Halo
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What are you trying to do that Halo does not yet support?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+    validations:
+      required: true
+  - type: input
+    id: phase
+    attributes:
+      label: Related roadmap phase
+      placeholder: e.g. Phase 7 — Widgets, Phase 11 — Plugins

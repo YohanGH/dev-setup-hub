@@ -46,5 +46,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 10** — customisation: optional `widgets` list in `config.toml` selects,
   orders, enables and disables widgets by id; `None` keeps the default set. The
   overlay honours it. Position/theme/opacity/font were already configurable.
+- **Phase 11** — plugin system (`halo-ui::plugin`): a `Plugin` trait contributes
+  widgets and a `PluginRegistry` resolves ids from plugins first then built-ins,
+  so extensions add widgets without touching the core. Includes an
+  `ExamplePlugin` template. External shared-library plugins remain future work.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

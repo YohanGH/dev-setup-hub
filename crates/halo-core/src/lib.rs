@@ -8,7 +8,7 @@
 //! The `sysinfo` backend is intentionally kept behind [`Monitor`]; direct
 //! `/proc` and `/sys` readers can replace it later without changing callers.
 
-use std::time::Instant;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use sysinfo::{Components, Disks, Networks, System};
@@ -80,16 +80,61 @@ impl Sample {
     }
 }
 
+/// Per-sensor refresh cadences (Roadmap Phase 13).
+///
+/// Each sensor is polled at its own rhythm so the monitor never re-reads
+/// everything on a single tick — fewer wakeups and lower CPU use, which is what
+/// lets a fast display refresh stay cheap.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SensorIntervals {
+    /// CPU load cadence.
+    pub cpu: Duration,
+    /// Memory + swap cadence.
+    pub memory: Duration,
+    /// Disk usage cadence.
+    pub disk: Duration,
+    /// Network throughput cadence.
+    pub network: Duration,
+    /// Temperature cadence.
+    pub temperature: Duration,
+}
+
+impl Default for SensorIntervals {
+    fn default() -> Self {
+        Self {
+            cpu: Duration::from_millis(250),
+            memory: Duration::from_secs(2),
+            disk: Duration::from_secs(5),
+            network: Duration::from_secs(1),
+            temperature: Duration::from_secs(2),
+        }
+    }
+}
+
+/// The next time each sensor is due to refresh.
+struct Deadlines {
+    cpu: Instant,
+    memory: Instant,
+    disk: Instant,
+    network: Instant,
+    temperature: Instant,
+}
+
 /// Collects [`Sample`]s from the running system.
 ///
-/// A single `Monitor` keeps its sensor handles alive between samples so it can
-/// derive network rates from the delta between refreshes.
+/// A single `Monitor` keeps its sensor handles alive between samples, refreshes
+/// each sensor only when it is due (see [`SensorIntervals`]) and returns a
+/// cached [`Sample`] updated in place, so callers can sample as often as they
+/// render without paying for every sensor each time.
 pub struct Monitor {
     system: System,
     disks: Disks,
     components: Components,
     networks: Networks,
-    last_refresh: Instant,
+    intervals: SensorIntervals,
+    due: Deadlines,
+    net_stamp: Instant,
+    current: Sample,
 }
 
 impl std::fmt::Debug for Monitor {
@@ -103,70 +148,108 @@ impl std::fmt::Debug for Monitor {
 }
 
 impl Monitor {
-    /// Create a monitor with all sensors initialised and refreshed once.
+    /// Create a monitor with the default per-sensor cadences.
     #[must_use]
     pub fn new() -> Self {
+        Self::with_intervals(SensorIntervals::default())
+    }
+
+    /// Create a monitor with custom per-sensor cadences.
+    #[must_use]
+    pub fn with_intervals(intervals: SensorIntervals) -> Self {
+        let now = Instant::now();
         Self {
             system: System::new_all(),
             disks: Disks::new_with_refreshed_list(),
             components: Components::new_with_refreshed_list(),
             networks: Networks::new_with_refreshed_list(),
-            last_refresh: Instant::now(),
+            intervals,
+            // Every sensor is due immediately, so the first sample is complete.
+            due: Deadlines {
+                cpu: now,
+                memory: now,
+                disk: now,
+                network: now,
+                temperature: now,
+            },
+            net_stamp: now,
+            current: Sample::default(),
         }
     }
 
-    /// Refresh every sensor and return the current [`Sample`].
+    /// The per-sensor cadences in effect.
+    #[must_use]
+    pub fn intervals(&self) -> SensorIntervals {
+        self.intervals
+    }
+
+    /// Refresh whichever sensors are due and return the current [`Sample`].
     ///
-    /// Network rates are averaged over the time elapsed since the previous
-    /// call, so calling this on a steady interval yields stable readings.
+    /// Sensors not yet due keep their cached value, so this is cheap to call at
+    /// the display refresh rate. Network rates are averaged over the time since
+    /// the network sensor was last refreshed.
     pub fn sample(&mut self) -> Sample {
-        let elapsed = self.last_refresh.elapsed().as_secs_f64().max(1e-3);
+        let now = Instant::now();
 
-        self.system.refresh_cpu_usage();
-        self.system.refresh_memory();
-        self.disks.refresh(true);
-        self.components.refresh(true);
-        self.networks.refresh(true);
-        self.last_refresh = Instant::now();
-
-        let (disk_used, disk_total) = self.disks.iter().fold((0, 0), |(used, total), disk| {
-            let disk_total = disk.total_space();
-            let disk_used = disk_total.saturating_sub(disk.available_space());
-            (used + disk_used, total + disk_total)
-        });
-
-        let (rx, tx) = self
-            .networks
-            .iter()
-            .fold((0u64, 0u64), |(rx, tx), (_, data)| {
-                (rx + data.received(), tx + data.transmitted())
-            });
-
-        let temp_celsius = self
-            .components
-            .iter()
-            .filter_map(sysinfo::Component::temperature)
-            .max_by(f32::total_cmp);
-
-        #[allow(
-            clippy::cast_possible_truncation,
-            clippy::cast_sign_loss,
-            clippy::cast_precision_loss
-        )]
-        let per_second = |bytes: u64| (bytes as f64 / elapsed) as u64;
-
-        Sample {
-            cpu_percent: self.system.global_cpu_usage(),
-            ram_used: self.system.used_memory(),
-            ram_total: self.system.total_memory(),
-            swap_used: self.system.used_swap(),
-            swap_total: self.system.total_swap(),
-            disk_used,
-            disk_total,
-            net_rx_bps: per_second(rx),
-            net_tx_bps: per_second(tx),
-            temp_celsius,
+        if now >= self.due.cpu {
+            self.system.refresh_cpu_usage();
+            self.current.cpu_percent = self.system.global_cpu_usage();
+            self.due.cpu = now + self.intervals.cpu;
         }
+
+        if now >= self.due.memory {
+            self.system.refresh_memory();
+            self.current.ram_used = self.system.used_memory();
+            self.current.ram_total = self.system.total_memory();
+            self.current.swap_used = self.system.used_swap();
+            self.current.swap_total = self.system.total_swap();
+            self.due.memory = now + self.intervals.memory;
+        }
+
+        if now >= self.due.disk {
+            self.disks.refresh(true);
+            let (used, total) = self.disks.iter().fold((0, 0), |(used, total), disk| {
+                let disk_total = disk.total_space();
+                let disk_used = disk_total.saturating_sub(disk.available_space());
+                (used + disk_used, total + disk_total)
+            });
+            self.current.disk_used = used;
+            self.current.disk_total = total;
+            self.due.disk = now + self.intervals.disk;
+        }
+
+        if now >= self.due.network {
+            self.networks.refresh(true);
+            let elapsed = (now - self.net_stamp).as_secs_f64().max(1e-3);
+            let (rx, tx) = self
+                .networks
+                .iter()
+                .fold((0u64, 0u64), |(rx, tx), (_, data)| {
+                    (rx + data.received(), tx + data.transmitted())
+                });
+            #[allow(
+                clippy::cast_possible_truncation,
+                clippy::cast_sign_loss,
+                clippy::cast_precision_loss
+            )]
+            let per_second = |bytes: u64| (bytes as f64 / elapsed) as u64;
+            self.current.net_rx_bps = per_second(rx);
+            self.current.net_tx_bps = per_second(tx);
+            self.net_stamp = now;
+            self.due.network = now + self.intervals.network;
+        }
+
+        if now >= self.due.temperature {
+            self.components.refresh(true);
+            self.current.temp_celsius = self
+                .components
+                .iter()
+                .filter_map(sysinfo::Component::temperature)
+                .max_by(f32::total_cmp);
+            self.due.temperature = now + self.intervals.temperature;
+        }
+
+        self.current
     }
 }
 
@@ -193,5 +276,26 @@ mod tests {
         assert!((0.0..=100.0).contains(&sample.cpu_percent));
         assert!((0.0..=100.0).contains(&sample.ram_percent()));
         assert!((0.0..=100.0).contains(&sample.disk_percent()));
+    }
+
+    #[test]
+    fn default_intervals_match_documented_cadence() {
+        let intervals = SensorIntervals::default();
+        assert_eq!(intervals.cpu, Duration::from_millis(250));
+        assert_eq!(intervals.memory, Duration::from_secs(2));
+        assert_eq!(intervals.disk, Duration::from_secs(5));
+        assert_eq!(intervals.network, Duration::from_secs(1));
+    }
+
+    #[test]
+    #[allow(clippy::float_cmp)] // cached values are byte-identical
+    fn back_to_back_samples_reuse_cache() {
+        let mut monitor = Monitor::new();
+        let first = monitor.sample();
+        // Called immediately: no sensor is due again, so values are cached.
+        let second = monitor.sample();
+        assert_eq!(first.cpu_percent, second.cpu_percent);
+        assert_eq!(first.ram_used, second.ram_used);
+        assert_eq!(first.disk_total, second.disk_total);
     }
 }

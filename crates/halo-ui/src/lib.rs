@@ -1,13 +1,18 @@
 //! Overlay rendering for Halo.
 //!
-//! `halo-ui` turns a [`halo_core::Sample`] into pixels on a transparent,
-//! borderless, always-on-top, click-through surface. The concrete GPU backend
-//! (egui/Slint on top of wgpu) is deliberately kept behind this crate's API so
-//! the rest of Halo depends only on the [`Overlay`] trait, never on a toolkit.
+//! `halo-ui` turns a [`halo_core::Sample`] into a presentation. Two things live
+//! here: the [`Overlay`] trait every backend implements, and [`TextOverlay`], a
+//! headless text backend used for early bring-up (Phase 1) and tests. The GPU
+//! overlay (Phase 2+) implements the same trait so the rest of Halo depends only
+//! on [`Overlay`], never on a windowing toolkit.
+
+pub mod format;
 
 use halo_config::Config;
 use halo_core::Sample;
 use halo_themes::Theme;
+
+pub use format::hud_line;
 
 /// A surface that can present system [`Sample`]s to the user.
 pub trait Overlay {
@@ -22,11 +27,10 @@ pub trait Overlay {
     fn render(&mut self, sample: &Sample) -> Result<(), Self::Error>;
 }
 
-/// A headless overlay that formats samples as text.
+/// A headless overlay that formats samples as a single line of text.
 ///
-/// It carries no windowing dependencies, which makes it useful for early
-/// bring-up (Phase 1–3) and for tests. It is replaced by a GPU overlay once
-/// the windowing backend lands.
+/// It carries no windowing dependencies, which makes it the renderer for the
+/// terminal phase and a convenient stand-in in tests.
 #[derive(Debug)]
 pub struct TextOverlay {
     theme: Theme,
@@ -43,11 +47,10 @@ impl TextOverlay {
     /// Format a sample into a one-line HUD string.
     #[must_use]
     pub fn format(&self, sample: &Sample) -> String {
+        // Config and theme will drive column selection and colour once the GPU
+        // backend lands; the text backend renders the full default line.
         let _ = (&self.theme, &self.config);
-        format!(
-            "CPU {:>5.1}% | RAM {:>5.1}%",
-            sample.cpu_percent, sample.ram_percent
-        )
+        hud_line(sample)
     }
 }
 
@@ -55,7 +58,7 @@ impl Overlay for TextOverlay {
     type Error = std::convert::Infallible;
 
     fn render(&mut self, sample: &Sample) -> Result<(), Self::Error> {
-        tracing::info!(target: "halo::overlay", "{}", self.format(sample));
+        tracing::info!(target: "halo::hud", "{}", self.format(sample));
         Ok(())
     }
 }
@@ -65,10 +68,11 @@ mod tests {
     use super::*;
 
     #[test]
-    fn format_reports_cpu_and_ram() {
+    fn format_reports_all_columns() {
         let overlay = TextOverlay::new(Config::default(), Theme::minimal());
         let line = overlay.format(&Sample::default());
-        assert!(line.contains("CPU"));
-        assert!(line.contains("RAM"));
+        for column in ["CPU", "RAM", "DISK", "TEMP"] {
+            assert!(line.contains(column), "missing column {column} in {line:?}");
+        }
     }
 }

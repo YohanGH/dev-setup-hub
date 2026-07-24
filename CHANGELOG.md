@@ -16,5 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Headless `TextOverlay` reporting CPU and RAM each tick.
 - MIT license, security policy, contribution guide and code of conduct.
 - CI (fmt, clippy, test) and a weekly `cargo deny` security audit.
+- **Phase 1** — full monitoring model in `halo-core` (`Sample` with CPU, RAM,
+  swap, disk, network rates and temperature) backed by `sysinfo`; timed run
+  loop printing `CPU/RAM/DISK/TEMP` each tick with clean Ctrl-C shutdown and
+  structured `tracing` logs. Byte/rate/temperature formatting helpers in
+  `halo-ui::format`; `Theme::by_name` lookup.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

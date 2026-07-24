@@ -54,6 +54,21 @@ impl Theme {
             font_family: "monospace".to_owned(),
         }
     }
+
+    /// Look up a built-in theme by name, falling back to [`Theme::minimal`].
+    #[must_use]
+    pub fn by_name(name: &str) -> Self {
+        builtins()
+            .into_iter()
+            .find(|theme| theme.name == name)
+            .unwrap_or_else(Self::minimal)
+    }
+}
+
+/// All themes shipped with Halo. Extended as new themes land (Roadmap Phase 8).
+#[must_use]
+pub fn builtins() -> Vec<Theme> {
+    vec![Theme::minimal()]
 }
 
 impl Default for Theme {

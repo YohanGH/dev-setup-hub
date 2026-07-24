@@ -48,6 +48,11 @@ pub struct Config {
     pub theme: String,
     /// Base font size in points.
     pub font_size: u16,
+    /// Enabled widgets, in display order (by id, e.g. `["cpu", "ram"]`).
+    ///
+    /// `None` means "use the renderer's built-in default set". An empty list
+    /// hides every widget. Unknown ids are ignored by the renderer.
+    pub widgets: Option<Vec<String>>,
 }
 
 impl Default for Config {
@@ -58,6 +63,7 @@ impl Default for Config {
             refresh_ms: 500,
             theme: "minimal".to_owned(),
             font_size: 18,
+            widgets: None,
         }
     }
 }
@@ -158,6 +164,16 @@ mod tests {
         assert_eq!(config.opacity, 1.0);
         assert_eq!(config.refresh_ms, MIN_REFRESH_MS);
         assert_eq!(config.font_size, 96);
+    }
+
+    #[test]
+    fn widgets_default_to_none_and_parse_as_list() {
+        assert!(Config::default().widgets.is_none());
+        let config = Config::from_toml("widgets = [\"cpu\", \"clock\"]").unwrap();
+        assert_eq!(
+            config.widgets.as_deref(),
+            Some(["cpu".to_owned(), "clock".to_owned()].as_slice())
+        );
     }
 
     #[test]

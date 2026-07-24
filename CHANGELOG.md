@@ -60,5 +60,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   temperature 2 s). `Monitor` refreshes only what is due and returns a cached
   `Sample`, so sampling at the display rate no longer re-reads every sensor —
   fewer wakeups, lower CPU. `Monitor::with_intervals` allows custom cadences.
+- **Phase 14** — roadmap status matrix in the README honestly tracking each
+  phase (✅ done / 🟡 logic-done, GPU-render pending / ⏳ todo). All logic and the
+  terminal HUD are complete and tested; reaching a true 1.0 requires the GPU
+  render engine (visible overlay widgets, GPU metrics) and the settings GUI,
+  which need a Linux graphical session to build and verify.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

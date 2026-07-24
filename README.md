@@ -159,25 +159,34 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour le détail du workflow et
 ## Roadmap
 
 La feuille de route va d'un simple affichage texte à un HUD GPU complet, chaque
-phase restant utilisable indépendamment.
+phase restant utilisable indépendamment. Légende : ✅ implémenté et testé ·
+🟡 logique implémentée, rendu GPU/visuel à venir · ⏳ à faire.
 
-| Phase | Objectif | Livrable |
-| :---: | -------- | -------- |
-| **0** | Préparation | Workspace qui compile, Git, CI — affiche `Hello Halo`. |
-| **1** | Premier daemon | Boucle + timer + arrêt propre + logs ; CPU/RAM/Disk/Temp dans le terminal. |
-| **2** | Premier overlay | Fenêtre transparente, sans bordure, toujours devant, click-through, raccourci clavier. |
-| **3** | Monitoring | Lecture CPU, RAM, Swap, disques, réseau chaque seconde. |
-| **4** | Configuration | `config.toml` lu au démarrage (position, opacité, thème…). |
-| **5** | Lancement | `cargo install --path .` puis `halo` ouvre le HUD immédiatement. |
-| **6** | Démarrage auto | Service utilisateur `systemd`. |
-| **7** | Widgets | Architecture Widget : CPU, RAM, Réseau, GPU, Horloge — indépendants. |
-| **8** | Thèmes | Minimal, Cyberpunk, Terminal, Glass, Nord, OLED, Monochrome. |
-| **9** | Animations | Transitions, fade, glow, interpolation — pas de saut brutal. |
-| **10** | Personnalisation | Position, alignement, widgets activables/désactivables. |
-| **11** | Plugins | Weather, Spotify, Docker, Git, GitHub, VPN, Bluetooth, Batterie — sans toucher au cœur. |
-| **12** | Interface graphique | Fenêtre de réglages avec aperçu, thèmes, couleurs, position — sans éditer le TOML à la main. |
-| **13** | Optimisation | CPU < 0,5 %, RAM < 15 Mo ; chaque capteur a son propre rythme (CPU 250 ms, RAM 2 s, disques 5 s, GPU 1 s). |
-| **14** | **Version 1.0** | Overlay, config, widgets, GPU, CPU/RAM/réseau/température, thèmes, auto-start, animations, plugins. |
+| Phase | Objectif | État | Livrable |
+| :---: | -------- | :--: | -------- |
+| **0** | Préparation | ✅ | Workspace qui compile, Git, CI — affiche `Hello Halo`. |
+| **1** | Premier daemon | ✅ | Boucle + timer + arrêt propre + logs ; CPU/RAM/Disk/Temp dans le terminal. |
+| **2** | Premier overlay | 🟡 | Fenêtre transparente, sans bordure, toujours devant, click-through, hotkey global (`halo overlay`). Rendu du contenu à venir avec le moteur GPU. |
+| **3** | Monitoring | ✅ | Lecture CPU, RAM, Swap, disques, réseau. |
+| **4** | Configuration | ✅ | `config.toml` découvert et lu au démarrage (XDG), valeurs bornées. |
+| **5** | Lancement | ✅ | `cargo install --path crates/halo-cli` puis `halo` ; `justfile`. |
+| **6** | Démarrage auto | ✅ | Service utilisateur `systemd` (`dist/systemd/halo.service`). |
+| **7** | Widgets | ✅ | Trait `Widget` + registre : CPU, RAM, Swap, Disk, Net, Temp, GPU, Horloge. |
+| **8** | Thèmes | ✅ | Minimal, Cyberpunk, Terminal, Glass, Nord, OLED, Monochrome. |
+| **9** | Animations | 🟡 | Easing + lissage exponentiel (`anim`), testés. Fade/glow visuels avec le GPU. |
+| **10** | Personnalisation | ✅ | Widgets activables/désactivables et ordonnés via `config.toml` ; position. |
+| **11** | Plugins | 🟡 | Système de plugins in-process (`Plugin` + registre). Chargement de `.so` à venir. |
+| **12** | Interface graphique | 🟡 | Écriture de la config (`halo init`, `Config::save`). Fenêtre egui à venir. |
+| **13** | Optimisation | ✅ | Scheduler par capteur (CPU 250 ms, RAM 2 s, disques 5 s, réseau 1 s). |
+| **14** | **Version 1.0** | ⏳ | Nécessite le moteur de rendu GPU (widgets/jauges visibles, GPU, animations) et l'UI de réglages. |
+
+> **État actuel (v0.1).** Toute la logique — monitoring, scheduler, config,
+> widgets, thèmes, animations, plugins — est implémentée et testée, et le HUD
+> **terminal** est pleinement fonctionnel. Ce qui manque pour une vraie 1.0
+> relève du **rendu graphique** : dessiner les widgets dans l'overlay
+> transparent (moteur wgpu/egui), l'échantillonnage GPU, et la fenêtre de
+> réglages. Ces éléments nécessitent une session graphique Linux pour être
+> développés et vérifiés.
 
 ### Au-delà de la 1.0 (v2)
 

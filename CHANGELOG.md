@@ -43,5 +43,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (linear / ease-out / ease-in-out) and a framerate-independent `Smoothed`
   exponential value so readings transition without abrupt jumps. Applied
   visually once the GPU renderer lands.
+- **Phase 10** — customisation: optional `widgets` list in `config.toml` selects,
+  orders, enables and disables widgets by id; `None` keeps the default set. The
+  overlay honours it. Position/theme/opacity/font were already configurable.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

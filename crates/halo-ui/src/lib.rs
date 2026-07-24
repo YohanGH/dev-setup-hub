@@ -51,13 +51,13 @@ impl TextOverlay {
     /// no widgets.
     #[must_use]
     pub fn new(config: &Config, theme: Theme) -> Self {
-        // Phase 10 will select the widget set from `config`; for now use the
-        // default set.
-        let _ = config;
-        let widgets = widget::default_ids()
-            .into_iter()
-            .filter_map(widget::by_id)
-            .collect();
+        let widgets = match &config.widgets {
+            Some(ids) => ids.iter().filter_map(|id| widget::by_id(id)).collect(),
+            None => widget::default_ids()
+                .into_iter()
+                .filter_map(widget::by_id)
+                .collect(),
+        };
         Self { theme, widgets }
     }
 
@@ -91,5 +91,17 @@ mod tests {
         for column in ["CPU", "RAM", "SWAP", "DISK", "NET", "TEMP"] {
             assert!(line.contains(column), "missing column {column} in {line:?}");
         }
+    }
+
+    #[test]
+    fn config_selects_and_orders_widgets() {
+        let config = Config {
+            widgets: Some(vec!["clock".to_owned(), "cpu".to_owned()]),
+            ..Config::default()
+        };
+        let overlay = TextOverlay::new(&config, Theme::minimal());
+        let line = overlay.format(&Sample::default());
+        assert!(line.contains("CPU"));
+        assert!(!line.contains("RAM"), "disabled widget rendered: {line:?}");
     }
 }

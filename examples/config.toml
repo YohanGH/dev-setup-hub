@@ -16,3 +16,8 @@ theme = "minimal"
 
 # Base font size in points
 font_size = 18
+
+# Enabled widgets, in display order. Omit this key to use the default set
+# (cpu, ram, swap, disk, net, temp). Available ids: cpu, ram, swap, disk, net,
+# temp, gpu, clock. An empty list hides everything.
+# widgets = ["cpu", "ram", "net", "temp", "clock"]

@@ -7,6 +7,7 @@
 //! on [`Overlay`], never on a windowing toolkit.
 
 pub mod format;
+pub mod widget;
 
 #[cfg(feature = "overlay")]
 pub mod overlay;
@@ -16,6 +17,7 @@ use halo_core::Sample;
 use halo_themes::Theme;
 
 pub use format::hud_line;
+use widget::Widget;
 
 /// A surface that can present system [`Sample`]s to the user.
 pub trait Overlay {
@@ -37,23 +39,34 @@ pub trait Overlay {
 #[derive(Debug)]
 pub struct TextOverlay {
     theme: Theme,
-    config: Config,
+    widgets: Vec<Box<dyn Widget>>,
 }
 
 impl TextOverlay {
     /// Create a text overlay from a config and theme.
+    ///
+    /// The active widget set is taken from `config` (Roadmap Phase 10), falling
+    /// back to the default set, and built once so rendering each tick allocates
+    /// no widgets.
     #[must_use]
-    pub fn new(config: Config, theme: Theme) -> Self {
-        Self { theme, config }
+    pub fn new(config: &Config, theme: Theme) -> Self {
+        // Phase 10 will select the widget set from `config`; for now use the
+        // default set.
+        let _ = config;
+        let widgets = widget::default_ids()
+            .into_iter()
+            .filter_map(widget::by_id)
+            .collect();
+        Self { theme, widgets }
     }
 
     /// Format a sample into a one-line HUD string.
     #[must_use]
     pub fn format(&self, sample: &Sample) -> String {
-        // Config and theme will drive column selection and colour once the GPU
-        // backend lands; the text backend renders the full default line.
-        let _ = (&self.theme, &self.config);
-        hud_line(sample)
+        // Theme will drive colour once the GPU backend lands; the text backend
+        // renders the active widgets as plain text.
+        let _ = &self.theme;
+        widget::render_line(&self.widgets, sample)
     }
 }
 
@@ -72,7 +85,7 @@ mod tests {
 
     #[test]
     fn format_reports_all_columns() {
-        let overlay = TextOverlay::new(Config::default(), Theme::minimal());
+        let overlay = TextOverlay::new(&Config::default(), Theme::minimal());
         let line = overlay.format(&Sample::default());
         for column in ["CPU", "RAM", "SWAP", "DISK", "NET", "TEMP"] {
             assert!(line.contains(column), "missing column {column} in {line:?}");

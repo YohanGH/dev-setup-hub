@@ -32,5 +32,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `$XDG_CONFIG_HOME/halo/config.toml` (or `~/.config/halo/config.toml`) at
   startup, falling back to defaults when absent. Loaded values are clamped to
   safe ranges (`Config::normalized`).
+- **Phase 7** — widget architecture (`halo-ui::widget`): a `Widget` trait with
+  independent CPU, RAM, swap, disk, network, temperature, GPU (placeholder) and
+  clock widgets, a `by_id` registry and `render_line` composer. The HUD line and
+  `TextOverlay` are now built from an ordered widget set.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

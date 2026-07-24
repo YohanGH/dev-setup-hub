@@ -24,7 +24,7 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
     let interval = Duration::from_millis(config.refresh_ms);
     let theme = Theme::by_name(&config.theme);
     let mut monitor = Monitor::new();
-    let mut overlay = TextOverlay::new(config, theme);
+    let mut overlay = TextOverlay::new(&config, theme);
     let mut ticker = tokio::time::interval(interval);
 
     tracing::info!(

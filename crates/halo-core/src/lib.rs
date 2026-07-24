@@ -58,6 +58,8 @@ pub struct Sample {
     pub net_tx_bps: u64,
     /// Highest reported component temperature in degrees Celsius, if any.
     pub temp_celsius: Option<f32>,
+    /// GPU utilisation as a percentage, if a GPU sensor is available.
+    pub gpu_percent: Option<f32>,
 }
 
 impl Sample {
@@ -97,6 +99,8 @@ pub struct SensorIntervals {
     pub network: Duration,
     /// Temperature cadence.
     pub temperature: Duration,
+    /// GPU utilisation cadence.
+    pub gpu: Duration,
 }
 
 impl Default for SensorIntervals {
@@ -107,6 +111,7 @@ impl Default for SensorIntervals {
             disk: Duration::from_secs(5),
             network: Duration::from_secs(1),
             temperature: Duration::from_secs(2),
+            gpu: Duration::from_secs(1),
         }
     }
 }
@@ -118,6 +123,28 @@ struct Deadlines {
     disk: Instant,
     network: Instant,
     temperature: Instant,
+    gpu: Instant,
+}
+
+/// Read GPU utilisation (0–100) from Linux DRM sysfs (AMD/Intel `amdgpu`/`i915`
+/// expose `gpu_busy_percent`). Returns `None` on other platforms or when no
+/// such sensor is present; NVIDIA (via NVML) is future work.
+#[cfg(target_os = "linux")]
+fn read_gpu_percent() -> Option<f32> {
+    for card in 0..8 {
+        let path = format!("/sys/class/drm/card{card}/device/gpu_busy_percent");
+        if let Ok(contents) = std::fs::read_to_string(&path) {
+            if let Ok(value) = contents.trim().parse::<f32>() {
+                return Some(value.clamp(0.0, 100.0));
+            }
+        }
+    }
+    None
+}
+
+#[cfg(not(target_os = "linux"))]
+fn read_gpu_percent() -> Option<f32> {
+    None
 }
 
 /// Collects [`Sample`]s from the running system.
@@ -171,6 +198,7 @@ impl Monitor {
                 disk: now,
                 network: now,
                 temperature: now,
+                gpu: now,
             },
             net_stamp: now,
             current: Sample::default(),
@@ -247,6 +275,11 @@ impl Monitor {
                 .filter_map(sysinfo::Component::temperature)
                 .max_by(f32::total_cmp);
             self.due.temperature = now + self.intervals.temperature;
+        }
+
+        if now >= self.due.gpu {
+            self.current.gpu_percent = read_gpu_percent();
+            self.due.gpu = now + self.intervals.gpu;
         }
 
         self.current

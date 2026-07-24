@@ -88,6 +88,7 @@ struct HaloApp {
     ram: Smoothed,
     swap: Smoothed,
     disk: Smoothed,
+    gpu: Smoothed,
 }
 
 impl HaloApp {
@@ -105,6 +106,7 @@ impl HaloApp {
             ram: Smoothed::new(0.0, TAU),
             swap: Smoothed::new(0.0, TAU),
             disk: Smoothed::new(0.0, TAU),
+            gpu: Smoothed::new(0.0, TAU),
         }
     }
 
@@ -177,6 +179,10 @@ impl eframe::App for HaloApp {
         let ram = self.ram.update(dt);
         let swap = self.swap.update(dt);
         let disk = self.disk.update(dt);
+        let gpu = sample.gpu_percent.map(|value| {
+            self.gpu.set_target(value);
+            self.gpu.update(dt)
+        });
 
         #[allow(clippy::cast_possible_truncation, clippy::cast_sign_loss)]
         let alpha = (self.config.opacity.clamp(0.0, 1.0) * 255.0) as u8;
@@ -196,6 +202,9 @@ impl eframe::App for HaloApp {
             gauge(ui, "RAM", ram, fg, accent);
             gauge(ui, "SWAP", swap, fg, accent);
             gauge(ui, "DISK", disk, fg, accent);
+            if let Some(gpu) = gpu {
+                gauge(ui, "GPU", gpu, fg, accent);
+            }
             ui.label(
                 RichText::new(format!(
                     "NET ↓{} ↑{}",

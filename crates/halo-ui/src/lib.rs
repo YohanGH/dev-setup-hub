@@ -8,6 +8,9 @@
 
 pub mod format;
 
+#[cfg(feature = "overlay")]
+pub mod overlay;
+
 use halo_config::Config;
 use halo_core::Sample;
 use halo_themes::Theme;

@@ -8,6 +8,11 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 
+[features]
+# Enable the windowed overlay backend (Roadmap Phase 2). Off by default so the
+# terminal HUD builds without a windowing stack.
+overlay = ["halo-ui/overlay"]
+
 [dependencies]
 halo-core.workspace = true
 halo-config.workspace = true

@@ -50,4 +50,23 @@ jobs:
           toolchain: ${{ matrix.toolchain }}
       - uses: Swatinem/rust-cache@v2
       - run: cargo build --workspace --all-targets
-      - run: cargo test --workspace --all-features
+      - run: cargo test --workspace
+
+  overlay:
+    name: Overlay backend (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy
+      - uses: Swatinem/rust-cache@v2
+      # winit / global-hotkey need the X11 + Wayland development libraries.
+      - name: Install windowing dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            libwayland-dev libxkbcommon-dev libx11-dev libxcb1-dev \
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
+      - run: cargo clippy -p halo-cli --features overlay --all-targets
+

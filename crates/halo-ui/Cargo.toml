@@ -8,11 +8,21 @@ license.workspace = true
 authors.workspace = true
 repository.workspace = true
 
+[features]
+# The windowed overlay backend (winit + a global hotkey). Opt-in so the default
+# build stays lightweight and headless-friendly. Requires a desktop session
+# (X11 / Wayland / macOS / Windows) to actually display anything. Per-pixel
+# transparent content arrives with the GPU renderer in a later phase.
+overlay = ["dep:winit", "dep:global-hotkey"]
+
 [dependencies]
 halo-core.workspace = true
 halo-config.workspace = true
 halo-themes.workspace = true
 tracing.workspace = true
+
+winit = { version = "0.30", optional = true }
+global-hotkey = { version = "0.6", optional = true }
 
 [lints]
 workspace = true

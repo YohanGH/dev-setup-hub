@@ -12,6 +12,10 @@ repository.workspace = true
 name = "halo"
 path = "src/main.rs"
 
+[features]
+# Build the `halo overlay` subcommand and its windowing stack (Phase 2).
+overlay = ["halo-daemon/overlay"]
+
 [dependencies]
 halo-config.workspace = true
 halo-daemon.workspace = true

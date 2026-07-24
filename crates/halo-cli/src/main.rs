@@ -1,7 +1,11 @@
 //! `halo` — the command-line entry point.
 //!
-//! Parses arguments, loads configuration and starts the daemon run loop.
-//! Running `halo` with no arguments launches the HUD immediately.
+//! Parses arguments, loads configuration and dispatches to the daemon. Running
+//! `halo` with no arguments launches the default HUD.
+//!
+//! `main` is intentionally synchronous: the overlay backend drives a `winit`
+//! event loop that must own the process main thread, so the async run loop is
+//! entered explicitly via a Tokio runtime only when needed.
 
 use std::path::PathBuf;
 
@@ -21,16 +25,19 @@ struct Cli {
     command: Option<Command>,
 }
 
-#[derive(Debug, Subcommand)]
+#[derive(Debug, Default, Subcommand)]
 enum Command {
-    /// Launch the HUD overlay (default when no subcommand is given).
+    /// Run the terminal HUD: sample the system and print each tick.
+    #[default]
     Run,
+    /// Launch the transparent overlay window (requires a desktop session).
+    #[cfg(feature = "overlay")]
+    Overlay,
     /// Print the effective configuration and exit.
     Config,
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<()> {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| "info".into()),
@@ -46,10 +53,19 @@ async fn main() -> anyhow::Result<()> {
         None => Config::default(),
     };
 
-    match cli.command.unwrap_or(Command::Run) {
-        Command::Run => halo_daemon::run(config).await?,
+    match cli.command.unwrap_or_default() {
+        Command::Run => run_async(halo_daemon::run(config))?,
+        #[cfg(feature = "overlay")]
+        Command::Overlay => halo_daemon::run_overlay(config)?,
         Command::Config => println!("{config:#?}"),
     }
 
     Ok(())
+}
+
+/// Drive an async task to completion on a fresh multi-threaded runtime.
+fn run_async<F: std::future::Future<Output = anyhow::Result<()>>>(fut: F) -> anyhow::Result<()> {
+    tokio::runtime::Runtime::new()
+        .context("building Tokio runtime")?
+        .block_on(fut)
 }

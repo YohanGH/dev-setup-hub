@@ -78,6 +78,20 @@ cargo run -p halo-cli -- --config examples/config.toml
 cargo run -p halo-cli -- config
 ```
 
+### Overlay transparent (Phase 2, optionnel)
+
+L'overlay fenêtré est derrière la feature `overlay` (winit + hotkey global) pour
+garder le build par défaut léger. Il nécessite une session graphique :
+
+```bash
+cargo run -p halo-cli --features overlay -- overlay
+```
+
+Fenêtre transparente, sans bordure, toujours au-dessus et **click-through**.
+`Ctrl+Alt+H` affiche/masque le HUD, `Échap` quitte. Le contenu (texte, jauges)
+sera dessiné par le moteur de rendu GPU dans une phase ultérieure ; sous Wayland,
+l'ancrage précis dans un coin passera à terme par `wlr-layer-shell`.
+
 Installer le binaire `halo` sur le système :
 
 ```bash

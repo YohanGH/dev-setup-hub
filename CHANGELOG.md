@@ -39,5 +39,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase 8** — seven built-in themes (minimal, cyberpunk, terminal, glass,
   nord, oled, monochrome) with `Color::rgba`, `themes::builtins()` and
   `themes::names()`.
+- **Phase 9** — animation maths (`halo-ui::anim`): `lerp`, an `Easing` curve
+  (linear / ease-out / ease-in-out) and a framerate-independent `Smoothed`
+  exponential value so readings transition without abrupt jumps. Applied
+  visually once the GPU renderer lands.
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

@@ -74,7 +74,7 @@ mod tests {
     fn format_reports_all_columns() {
         let overlay = TextOverlay::new(Config::default(), Theme::minimal());
         let line = overlay.format(&Sample::default());
-        for column in ["CPU", "RAM", "DISK", "TEMP"] {
+        for column in ["CPU", "RAM", "SWAP", "DISK", "NET", "TEMP"] {
             assert!(line.contains(column), "missing column {column} in {line:?}");
         }
     }

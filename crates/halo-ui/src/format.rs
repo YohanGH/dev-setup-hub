@@ -32,14 +32,19 @@ pub fn temperature(celsius: Option<f32>) -> String {
     celsius.map_or_else(|| "--°C".to_owned(), |t| format!("{t:.0}°C"))
 }
 
-/// Build the default single-line HUD string: CPU, RAM, disk and temperature.
+/// Build the default single-line HUD string covering every core sensor:
+/// CPU, RAM, swap, disk, network throughput and temperature.
 #[must_use]
 pub fn hud_line(sample: &Sample) -> String {
     format!(
-        "CPU {:>5.1}% │ RAM {:>5.1}% │ DISK {:>5.1}% │ TEMP {}",
+        "CPU {:>5.1}% │ RAM {:>5.1}% │ SWAP {:>5.1}% │ DISK {:>5.1}% │ \
+         NET ↓{} ↑{} │ TEMP {}",
         sample.cpu_percent,
         sample.ram_percent(),
+        sample.swap_percent(),
         sample.disk_percent(),
+        rate(sample.net_rx_bps),
+        rate(sample.net_tx_bps),
         temperature(sample.temp_celsius),
     )
 }

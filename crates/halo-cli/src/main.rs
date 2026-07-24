@@ -35,6 +35,8 @@ enum Command {
     Overlay,
     /// Print the effective configuration and exit.
     Config,
+    /// Write the current configuration to the standard config path.
+    Init,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -58,6 +60,10 @@ fn main() -> anyhow::Result<()> {
         #[cfg(feature = "overlay")]
         Command::Overlay => halo_daemon::run_overlay(config)?,
         Command::Config => println!("{config:#?}"),
+        Command::Init => {
+            let path = config.save_default().context("writing config file")?;
+            println!("wrote config to {}", path.display());
+        }
     }
 
     Ok(())

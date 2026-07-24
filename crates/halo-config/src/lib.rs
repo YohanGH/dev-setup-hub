@@ -17,6 +17,12 @@ pub enum ConfigError {
     /// The configuration file was not valid TOML or violated the schema.
     #[error("failed to parse config: {0}")]
     Parse(#[from] toml::de::Error),
+    /// The configuration could not be serialised to TOML.
+    #[error("failed to serialise config: {0}")]
+    Serialize(#[from] toml::ser::Error),
+    /// No config directory could be determined for the default path.
+    #[error("no config directory found (set $XDG_CONFIG_HOME or $HOME)")]
+    NoConfigDir,
 }
 
 /// Where the HUD anchors itself on screen.
@@ -41,7 +47,9 @@ pub struct Config {
     /// Anchor position of the overlay.
     pub position: Position,
     /// Overlay opacity in the `0.0..=1.0` range.
-    pub opacity: f32,
+    ///
+    /// Stored as `f64` so a value like `0.55` round-trips cleanly through TOML.
+    pub opacity: f64,
     /// Refresh interval in milliseconds.
     pub refresh_ms: u64,
     /// Active theme name (see `halo-themes`).
@@ -52,6 +60,7 @@ pub struct Config {
     ///
     /// `None` means "use the renderer's built-in default set". An empty list
     /// hides every widget. Unknown ids are ignored by the renderer.
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub widgets: Option<Vec<String>>,
 }
 
@@ -101,6 +110,41 @@ impl Config {
             Some(path) if path.is_file() => Self::load(path),
             _ => Ok(Self::default()),
         }
+    }
+
+    /// Serialise the config to a pretty TOML string.
+    ///
+    /// # Errors
+    /// Returns [`ConfigError::Serialize`] if serialisation fails.
+    pub fn to_toml(&self) -> Result<String, ConfigError> {
+        Ok(toml::to_string_pretty(self)?)
+    }
+
+    /// Write the config to `path`, creating parent directories as needed.
+    ///
+    /// This is what a settings UI (Roadmap Phase 12) or `halo init` calls so
+    /// users never hand-edit the file.
+    ///
+    /// # Errors
+    /// Returns [`ConfigError::Serialize`] or [`ConfigError::Io`] on failure.
+    pub fn save(&self, path: impl AsRef<Path>) -> Result<(), ConfigError> {
+        let path = path.as_ref();
+        if let Some(parent) = path.parent() {
+            std::fs::create_dir_all(parent)?;
+        }
+        std::fs::write(path, self.to_toml()?)?;
+        Ok(())
+    }
+
+    /// Write the config to the standard location, returning the path written.
+    ///
+    /// # Errors
+    /// Returns [`ConfigError::NoConfigDir`] if no config directory is known, or
+    /// a serialisation/IO error on failure.
+    pub fn save_default(&self) -> Result<PathBuf, ConfigError> {
+        let path = default_path().ok_or(ConfigError::NoConfigDir)?;
+        self.save(&path)?;
+        Ok(path)
     }
 
     /// Clamp fields to sane ranges so a hand-edited file can't misbehave.
@@ -180,5 +224,20 @@ mod tests {
     fn config_path_is_under_halo_dir() {
         let path = config_path_in(Path::new("/home/user/.config"));
         assert!(path.ends_with("halo/config.toml"));
+    }
+
+    #[test]
+    fn save_then_load_round_trips() {
+        let dir = std::env::temp_dir().join(format!("halo-cfg-{}", std::process::id()));
+        let path = dir.join("halo").join("config.toml");
+        let original = Config {
+            theme: "nord".to_owned(),
+            widgets: Some(vec!["cpu".to_owned(), "clock".to_owned()]),
+            ..Config::default()
+        };
+        original.save(&path).unwrap();
+        let loaded = Config::load(&path).unwrap();
+        assert_eq!(loaded, original);
+        std::fs::remove_dir_all(&dir).ok();
     }
 }

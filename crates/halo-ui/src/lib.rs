@@ -14,6 +14,9 @@ pub mod widget;
 #[cfg(feature = "overlay")]
 pub mod overlay;
 
+#[cfg(feature = "gui")]
+pub mod settings;
+
 use halo_config::Config;
 use halo_core::Sample;
 use halo_themes::Theme;
@@ -52,13 +55,17 @@ impl TextOverlay {
     /// no widgets.
     #[must_use]
     pub fn new(config: &Config, theme: Theme) -> Self {
-        let widgets = match &config.widgets {
-            Some(ids) => ids.iter().filter_map(|id| widget::by_id(id)).collect(),
+        // Resolve ids through the plugin registry first, then built-in widgets,
+        // so a config like `widgets = ["cpu", "git"]` picks up plugin widgets.
+        let registry = plugin::builtin_registry();
+        let ids: Vec<String> = match &config.widgets {
+            Some(ids) => ids.clone(),
             None => widget::default_ids()
                 .into_iter()
-                .filter_map(widget::by_id)
+                .map(str::to_owned)
                 .collect(),
         };
+        let widgets = ids.iter().filter_map(|id| registry.resolve(id)).collect();
         Self { theme, widgets }
     }
 

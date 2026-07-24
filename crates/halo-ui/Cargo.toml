@@ -9,11 +9,11 @@ authors.workspace = true
 repository.workspace = true
 
 [features]
-# The windowed overlay backend (winit + a global hotkey). Opt-in so the default
-# build stays lightweight and headless-friendly. Requires a desktop session
-# (X11 / Wayland / macOS / Windows) to actually display anything. Per-pixel
-# transparent content arrives with the GPU renderer in a later phase.
-overlay = ["dep:winit", "dep:global-hotkey"]
+# The GPU overlay backend (eframe/egui) and the settings GUI. Opt-in so the
+# default build stays lightweight and headless-friendly. Requires a desktop
+# session (X11 / Wayland / macOS / Windows) to run.
+overlay = ["dep:eframe", "dep:global-hotkey"]
+gui = ["overlay"]
 
 [dependencies]
 halo-core.workspace = true
@@ -21,7 +21,12 @@ halo-config.workspace = true
 halo-themes.workspace = true
 tracing.workspace = true
 
-winit = { version = "0.30", optional = true }
+eframe = { version = "0.31", optional = true, default-features = false, features = [
+    "glow",
+    "default_fonts",
+    "wayland",
+    "x11",
+] }
 global-hotkey = { version = "0.6", optional = true }
 
 [lints]

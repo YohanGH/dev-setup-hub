@@ -53,7 +53,7 @@ jobs:
       - run: cargo test --workspace
 
   overlay:
-    name: Overlay backend (Linux)
+    name: Overlay + GUI backend (Linux)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -61,12 +61,13 @@ jobs:
         with:
           components: clippy
       - uses: Swatinem/rust-cache@v2
-      # winit / global-hotkey need the X11 + Wayland development libraries.
+      # eframe/egui (glow) + global-hotkey need the X11 + Wayland + GL headers.
       - name: Install windowing dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             libwayland-dev libxkbcommon-dev libx11-dev libxcb1-dev \
-            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev
-      - run: cargo clippy -p halo-cli --features overlay --all-targets
+            libxcb-render0-dev libxcb-shape0-dev libxcb-xfixes0-dev \
+            libgl1-mesa-dev libglib2.0-dev
+      - run: cargo clippy -p halo-cli --features gui --all-targets
 

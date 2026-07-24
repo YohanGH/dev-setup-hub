@@ -33,6 +33,9 @@ enum Command {
     /// Launch the transparent overlay window (requires a desktop session).
     #[cfg(feature = "overlay")]
     Overlay,
+    /// Open the graphical settings window (requires a desktop session).
+    #[cfg(feature = "gui")]
+    Settings,
     /// Print the effective configuration and exit.
     Config,
     /// Write the current configuration to the standard config path.
@@ -59,6 +62,8 @@ fn main() -> anyhow::Result<()> {
         Command::Run => run_async(halo_daemon::run(config))?,
         #[cfg(feature = "overlay")]
         Command::Overlay => halo_daemon::run_overlay(config)?,
+        #[cfg(feature = "gui")]
+        Command::Settings => halo_daemon::run_settings(config)?,
         Command::Config => println!("{config:#?}"),
         Command::Init => {
             let path = config.save_default().context("writing config file")?;

@@ -123,12 +123,16 @@ Emplacement recommandé : `~/.config/halo/config.toml`.
 ## Démarrage automatique (systemd)
 
 Sous Linux, la bonne pratique est un service utilisateur `systemd`, plus fiable
-qu'un script lancé au hasard dans le gestionnaire de session :
+qu'un script lancé au hasard dans le gestionnaire de session. Une unité prête à
+l'emploi est fournie dans [`dist/systemd/halo.service`](dist/systemd/halo.service) :
 
 ```bash
-# ~/.config/systemd/user/halo.service
+install -Dm644 dist/systemd/halo.service ~/.config/systemd/user/halo.service
+systemctl --user daemon-reload
 systemctl --user enable --now halo
 ```
+
+Halo démarre alors automatiquement avec la session graphique.
 
 ## Développement
 

@@ -8,6 +8,7 @@
 
 pub mod anim;
 pub mod format;
+pub mod plugin;
 pub mod widget;
 
 #[cfg(feature = "overlay")]

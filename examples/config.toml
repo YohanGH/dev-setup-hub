@@ -1,0 +1,18 @@
+# Example Halo configuration.
+# Copy to ~/.config/halo/config.toml and edit to taste.
+# Every field is optional; omitted keys fall back to the built-in defaults.
+
+# Anchor position of the overlay: top-left | top-right | bottom-left | bottom-right
+position = "top-right"
+
+# Overlay opacity, 0.0 (invisible) .. 1.0 (opaque)
+opacity = 0.55
+
+# Refresh interval in milliseconds
+refresh_ms = 500
+
+# Active theme (see the halo-themes crate)
+theme = "minimal"
+
+# Base font size in points
+font_size = 18

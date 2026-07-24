@@ -1,0 +1,18 @@
+[package]
+name = "halo-ui"
+description = "Transparent, click-through overlay rendering for the Halo HUD."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+halo-core.workspace = true
+halo-config.workspace = true
+halo-themes.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

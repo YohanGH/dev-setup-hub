@@ -1,0 +1,21 @@
+[package]
+name = "halo-daemon"
+description = "Async sampling loop that drives the Halo overlay."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+halo-core.workspace = true
+halo-config.workspace = true
+halo-ui.workspace = true
+halo-themes.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

@@ -26,5 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to the configured corner, with a global hotkey (`Ctrl+Alt+H`) to toggle
   visibility and `Esc` to quit. Exposed as `halo overlay`. Off by default so the
   terminal HUD and CI stay windowing-free.
+- **Phase 3** — HUD line now reports swap usage and network throughput
+  (↓rx ↑tx) beside CPU/RAM/disk/temperature.
+- **Phase 4** — `config.toml` auto-discovery: `Config::load_default()` reads
+  `$XDG_CONFIG_HOME/halo/config.toml` (or `~/.config/halo/config.toml`) at
+  startup, falling back to defaults when absent. Loaded values are clamped to
+  safe ranges (`Config::normalized`).
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

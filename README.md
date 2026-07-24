@@ -180,15 +180,16 @@ phase restant utilisable indépendamment. Légende : ✅ implémenté et testé 
 | **11** | Plugins | ✅ | Système de plugins in-process (`Plugin` + registre) + plugin `git` réel. Chargement de `.so` : à venir. |
 | **12** | Interface graphique | 🟢 | Fenêtre de réglages `egui` avec aperçu + écriture `config.toml` (`halo settings`, `halo init`). |
 | **13** | Optimisation | ✅ | Scheduler par capteur (CPU 250 ms, RAM 2 s, disques 5 s, réseau 1 s). |
-| **14** | **Version 1.0** | 🟢 | Overlay rendu, config, widgets, CPU/RAM/réseau/température, thèmes, auto-start, animations, plugins. Reste : échantillonnage **GPU** réel (widget encore fictif) et vérification visuelle. |
+| **14** | **Version 1.0** | 🟢 | Overlay rendu, config, widgets, CPU/RAM/réseau/température/**GPU**, thèmes, auto-start, animations, plugins. Reste : **vérification visuelle** sur bureau Linux (GPU NVIDIA via NVML à venir). |
 
-> **État actuel (v0.1).** Toute la logique — monitoring, scheduler, config,
-> widgets, thèmes, animations, plugins — est implémentée et testée, le HUD
-> **terminal** est pleinement fonctionnel, et l'**overlay graphique** ainsi que
-> la **fenêtre de réglages** sont implémentés (`eframe`/`egui`) et compilent.
-> N'ayant pas de session graphique dans l'environnement de développement, le
-> rendu visuel de l'overlay/GUI reste **à vérifier sur un bureau Linux**, et
-> l'échantillonnage **GPU** (widget `gpu`) est encore un espace réservé.
+> **État actuel (v0.1).** Toute la logique — monitoring, scheduler (dont
+> l'échantillonnage **GPU** sur Linux AMD/Intel via sysfs), config, widgets,
+> thèmes, animations, plugins — est implémentée et testée, le HUD **terminal**
+> est pleinement fonctionnel, et l'**overlay graphique** ainsi que la **fenêtre
+> de réglages** sont implémentés (`eframe`/`egui`) et compilent. N'ayant pas de
+> session graphique dans l'environnement de développement, le rendu visuel de
+> l'overlay/GUI reste **à vérifier sur un bureau Linux**. GPU NVIDIA (NVML) et
+> l'ancrage Wayland `wlr-layer-shell` sont les évolutions restantes.
 
 ### Au-delà de la 1.0 (v2)
 

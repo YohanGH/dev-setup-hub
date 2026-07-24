@@ -50,5 +50,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   widgets and a `PluginRegistry` resolves ids from plugins first then built-ins,
   so extensions add widgets without touching the core. Includes an
   `ExamplePlugin` template. External shared-library plugins remain future work.
+- **Phase 12** — configuration write-back: `Config::to_toml`, `save` and
+  `save_default` persist settings so nothing is hand-edited; exposed via
+  `halo init`. Opacity is now `f64` for clean TOML round-tripping. The graphical
+  settings window (egui, live preview) builds on these APIs and is deferred
+  (needs a desktop session).
 
 [Unreleased]: https://github.com/YohanGH/halo/commits/main

@@ -118,7 +118,16 @@ theme      = "minimal"
 font_size  = 18
 ```
 
-Emplacement recommandé : `~/.config/halo/config.toml`.
+Emplacement recommandé : `~/.config/halo/config.toml`. Générez un fichier de
+départ sans l'écrire à la main :
+
+```bash
+cargo run -p halo-cli -- init   # écrit la config par défaut dans le chemin standard
+```
+
+> Une fenêtre de réglages graphique (egui) avec aperçu en direct est prévue
+> (Phase 12) et s'appuiera sur `Config::save` / `to_toml` ; elle nécessite une
+> session graphique et n'est pas encore implémentée.
 
 ## Démarrage automatique (systemd)
 

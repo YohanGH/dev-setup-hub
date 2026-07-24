@@ -40,7 +40,7 @@ pub struct Net;
 /// Highest component temperature widget.
 #[derive(Debug, Clone, Copy)]
 pub struct Temp;
-/// GPU load widget. Placeholder until GPU sampling lands.
+/// GPU utilisation widget (Linux DRM sysfs; `--` where unavailable).
 #[derive(Debug, Clone, Copy)]
 pub struct Gpu;
 /// Wall-clock widget (UTC until a timezone source is added).
@@ -109,9 +109,12 @@ impl Widget for Gpu {
     fn id(&self) -> &'static str {
         "gpu"
     }
-    fn render(&self, _sample: &Sample) -> String {
-        // GPU metrics are not sampled yet; render a stable placeholder.
-        "GPU   --%".to_owned()
+    fn render(&self, sample: &Sample) -> String {
+        // `None` when no GPU sensor is available (non-Linux, or NVIDIA-only).
+        match sample.gpu_percent {
+            Some(percent) => format!("GPU {percent:>5.1}%"),
+            None => "GPU   --%".to_owned(),
+        }
     }
 }
 

@@ -99,6 +99,11 @@ cargo install --path crates/halo-cli
 halo            # démarre le HUD depuis n'importe où
 ```
 
+Un [`justfile`](justfile) regroupe les tâches courantes (`just run`,
+`just overlay`, `just install`, `just ci`…) si vous avez
+[`just`](https://github.com/casey/just) ; sinon, chaque tâche reste une simple
+commande `cargo`.
+
 ## Configuration
 
 Halo est piloté par un unique `config.toml` (voir

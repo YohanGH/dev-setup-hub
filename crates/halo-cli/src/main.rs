@@ -50,7 +50,7 @@ fn main() -> anyhow::Result<()> {
         Some(path) => {
             Config::load(path).with_context(|| format!("loading config from {}", path.display()))?
         }
-        None => Config::default(),
+        None => Config::load_default().context("loading default config")?,
     };
 
     match cli.command.unwrap_or_default() {

@@ -72,6 +72,17 @@ impl PluginRegistry {
     }
 }
 
+/// A registry pre-loaded with the plugins Halo ships with.
+///
+/// Used by the renderer to resolve widget ids so a config like
+/// `widgets = ["cpu", "git"]` picks up plugin widgets transparently.
+#[must_use]
+pub fn builtin_registry() -> PluginRegistry {
+    let mut registry = PluginRegistry::new();
+    registry.register(Box::new(GitPlugin));
+    registry
+}
+
 /// A minimal example plugin contributing a static `greeting` widget.
 ///
 /// It exists to exercise the plugin path end to end and to serve as a template
@@ -100,6 +111,47 @@ impl Plugin for ExamplePlugin {
     }
 }
 
+/// A real plugin: shows the current Git branch of the working directory.
+///
+/// Reads `.git/HEAD` directly — no dependency, no subprocess — demonstrating a
+/// plugin doing real work without touching the core.
+#[derive(Debug, Clone, Copy)]
+pub struct GitPlugin;
+
+#[derive(Debug, Clone, Copy)]
+struct GitBranch;
+
+/// Read the current branch (or short commit) from `.git/HEAD`, if present.
+fn git_branch() -> Option<String> {
+    let head = std::fs::read_to_string(".git/HEAD").ok()?;
+    let head = head.trim();
+    if let Some(reference) = head.strip_prefix("ref: ") {
+        // e.g. "ref: refs/heads/main" -> "main"
+        Some(reference.rsplit('/').next().unwrap_or(reference).to_owned())
+    } else {
+        // Detached HEAD: a raw commit hash.
+        Some(head.chars().take(7).collect())
+    }
+}
+
+impl Widget for GitBranch {
+    fn id(&self) -> &'static str {
+        "git"
+    }
+    fn render(&self, _sample: &halo_core::Sample) -> String {
+        format!("GIT {}", git_branch().unwrap_or_else(|| "--".to_owned()))
+    }
+}
+
+impl Plugin for GitPlugin {
+    fn name(&self) -> &'static str {
+        "git"
+    }
+    fn widgets(&self) -> Vec<Box<dyn Widget>> {
+        vec![Box::new(GitBranch)]
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -119,5 +171,13 @@ mod tests {
         let registry = PluginRegistry::new();
         assert!(registry.resolve("cpu").is_some());
         assert!(registry.resolve("nonexistent").is_none());
+    }
+
+    #[test]
+    fn builtin_registry_resolves_git_widget() {
+        let registry = builtin_registry();
+        let widget = registry.resolve("git").expect("git widget");
+        // Renders whether or not a .git dir exists (falls back to "GIT --").
+        assert!(widget.render(&Sample::default()).starts_with("GIT "));
     }
 }

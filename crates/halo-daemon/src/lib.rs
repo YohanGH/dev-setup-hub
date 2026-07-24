@@ -66,3 +66,14 @@ pub async fn run(config: Config) -> anyhow::Result<()> {
 pub fn run_overlay(config: Config) -> anyhow::Result<()> {
     halo_ui::overlay::run(config).map_err(|err| anyhow::anyhow!("overlay error: {err}"))
 }
+
+/// Open the graphical settings window (Roadmap Phase 12).
+///
+/// Blocks on the windowing backend; must run on the process main thread.
+///
+/// # Errors
+/// Propagates any error from the windowing backend.
+#[cfg(feature = "gui")]
+pub fn run_settings(config: Config) -> anyhow::Result<()> {
+    halo_ui::settings::run(config).map_err(|err| anyhow::anyhow!("settings error: {err}"))
+}

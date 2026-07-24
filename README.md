@@ -78,19 +78,21 @@ cargo run -p halo-cli -- --config examples/config.toml
 cargo run -p halo-cli -- config
 ```
 
-### Overlay transparent (Phase 2, optionnel)
+### Overlay graphique & réglages (features optionnelles)
 
-L'overlay fenêtré est derrière la feature `overlay` (winit + hotkey global) pour
-garder le build par défaut léger. Il nécessite une session graphique :
+L'overlay GPU et la fenêtre de réglages sont derrière des features (`eframe`/
+`egui`) pour garder le build par défaut léger. Ils nécessitent une session
+graphique :
 
 ```bash
-cargo run -p halo-cli --features overlay -- overlay
+cargo run -p halo-cli --features overlay -- overlay    # HUD transparent (jauges animées)
+cargo run -p halo-cli --features gui -- settings        # fenêtre de réglages avec aperçu
 ```
 
-Fenêtre transparente, sans bordure, toujours au-dessus et **click-through**.
-`Ctrl+Alt+H` affiche/masque le HUD, `Échap` quitte. Le contenu (texte, jauges)
-sera dessiné par le moteur de rendu GPU dans une phase ultérieure ; sous Wayland,
-l'ancrage précis dans un coin passera à terme par `wlr-layer-shell`.
+L'overlay est transparent, sans bordure, toujours au-dessus et **click-through**
+(la souris passe au travers) ; les jauges CPU/RAM/Swap/Disk s'animent en douceur
+vers chaque nouvelle valeur, selon le thème. `Ctrl+Alt+H` affiche/masque le HUD.
+Sous Wayland, l'ancrage précis dans un coin passera à terme par `wlr-layer-shell`.
 
 Installer le binaire `halo` sur le système :
 
@@ -160,33 +162,33 @@ Voir [CONTRIBUTING.md](CONTRIBUTING.md) pour le détail du workflow et
 
 La feuille de route va d'un simple affichage texte à un HUD GPU complet, chaque
 phase restant utilisable indépendamment. Légende : ✅ implémenté et testé ·
-🟡 logique implémentée, rendu GPU/visuel à venir · ⏳ à faire.
+🟢 implémenté et compilé, à vérifier visuellement sur un bureau Linux · ⏳ à faire.
 
 | Phase | Objectif | État | Livrable |
 | :---: | -------- | :--: | -------- |
 | **0** | Préparation | ✅ | Workspace qui compile, Git, CI — affiche `Hello Halo`. |
 | **1** | Premier daemon | ✅ | Boucle + timer + arrêt propre + logs ; CPU/RAM/Disk/Temp dans le terminal. |
-| **2** | Premier overlay | 🟡 | Fenêtre transparente, sans bordure, toujours devant, click-through, hotkey global (`halo overlay`). Rendu du contenu à venir avec le moteur GPU. |
+| **2** | Premier overlay | 🟢 | Fenêtre transparente, sans bordure, toujours devant, click-through + hotkey global, **jauges rendues** (`eframe`/`egui`) — `halo overlay`. |
 | **3** | Monitoring | ✅ | Lecture CPU, RAM, Swap, disques, réseau. |
 | **4** | Configuration | ✅ | `config.toml` découvert et lu au démarrage (XDG), valeurs bornées. |
 | **5** | Lancement | ✅ | `cargo install --path crates/halo-cli` puis `halo` ; `justfile`. |
 | **6** | Démarrage auto | ✅ | Service utilisateur `systemd` (`dist/systemd/halo.service`). |
 | **7** | Widgets | ✅ | Trait `Widget` + registre : CPU, RAM, Swap, Disk, Net, Temp, GPU, Horloge. |
 | **8** | Thèmes | ✅ | Minimal, Cyberpunk, Terminal, Glass, Nord, OLED, Monochrome. |
-| **9** | Animations | 🟡 | Easing + lissage exponentiel (`anim`), testés. Fade/glow visuels avec le GPU. |
+| **9** | Animations | 🟢 | Easing + lissage exponentiel (`anim`, testés) **appliqués aux jauges** de l'overlay. |
 | **10** | Personnalisation | ✅ | Widgets activables/désactivables et ordonnés via `config.toml` ; position. |
-| **11** | Plugins | 🟡 | Système de plugins in-process (`Plugin` + registre). Chargement de `.so` à venir. |
-| **12** | Interface graphique | 🟡 | Écriture de la config (`halo init`, `Config::save`). Fenêtre egui à venir. |
+| **11** | Plugins | ✅ | Système de plugins in-process (`Plugin` + registre) + plugin `git` réel. Chargement de `.so` : à venir. |
+| **12** | Interface graphique | 🟢 | Fenêtre de réglages `egui` avec aperçu + écriture `config.toml` (`halo settings`, `halo init`). |
 | **13** | Optimisation | ✅ | Scheduler par capteur (CPU 250 ms, RAM 2 s, disques 5 s, réseau 1 s). |
-| **14** | **Version 1.0** | ⏳ | Nécessite le moteur de rendu GPU (widgets/jauges visibles, GPU, animations) et l'UI de réglages. |
+| **14** | **Version 1.0** | 🟢 | Overlay rendu, config, widgets, CPU/RAM/réseau/température, thèmes, auto-start, animations, plugins. Reste : échantillonnage **GPU** réel (widget encore fictif) et vérification visuelle. |
 
 > **État actuel (v0.1).** Toute la logique — monitoring, scheduler, config,
-> widgets, thèmes, animations, plugins — est implémentée et testée, et le HUD
-> **terminal** est pleinement fonctionnel. Ce qui manque pour une vraie 1.0
-> relève du **rendu graphique** : dessiner les widgets dans l'overlay
-> transparent (moteur wgpu/egui), l'échantillonnage GPU, et la fenêtre de
-> réglages. Ces éléments nécessitent une session graphique Linux pour être
-> développés et vérifiés.
+> widgets, thèmes, animations, plugins — est implémentée et testée, le HUD
+> **terminal** est pleinement fonctionnel, et l'**overlay graphique** ainsi que
+> la **fenêtre de réglages** sont implémentés (`eframe`/`egui`) et compilent.
+> N'ayant pas de session graphique dans l'environnement de développement, le
+> rendu visuel de l'overlay/GUI reste **à vérifier sur un bureau Linux**, et
+> l'échantillonnage **GPU** (widget `gpu`) est encore un espace réservé.
 
 ### Au-delà de la 1.0 (v2)
 

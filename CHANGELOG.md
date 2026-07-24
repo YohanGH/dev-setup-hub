@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Graphical rendering (completes Phases 2, 9, 12; advances 11, 14).** The
+  overlay is now a real `eframe`/`egui` GPU renderer: a transparent, borderless,
+  always-on-top, mouse-pass-through window drawing themed CPU/RAM/swap/disk
+  gauges that **ease** toward each reading (Phase 9 `anim` applied), anchored to
+  the configured corner, toggled with `Ctrl+Alt+H` (`halo overlay`). Adds a
+  graphical settings window with live preview that writes `config.toml`
+  (`halo settings`, feature `gui`). Adds a real `GitPlugin` (reads `.git/HEAD`)
+  and wires the plugin registry into widget resolution so `widgets = ["cpu",
+  "git"]` works. Feature-gated (`overlay`, `gui`); the default build stays
+  windowing-free. Not visually verified in this headless environment — compiles
+  and lints clean on macOS and, via CI, on Linux. GPU-metric sampling (the `gpu`
+  widget) remains a placeholder.
+
+
 - Cargo workspace scaffold with six crates: `halo-core`, `halo-config`,
   `halo-ui`, `halo-daemon`, `halo-themes`, `halo-cli`.
 - `halo` binary that loads configuration and runs the sampling loop

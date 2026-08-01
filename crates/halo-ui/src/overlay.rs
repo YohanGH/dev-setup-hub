@@ -6,9 +6,18 @@
 //! reading (Phase 9) using [`crate::anim::Smoothed`], themed via `halo-themes`
 //! and anchored to the configured corner.
 //!
-//! Gated behind the `overlay` feature; requires a desktop session to run. On
-//! Wayland, precise corner anchoring ultimately wants `wlr-layer-shell`; until
-//! then we anchor using the reported monitor size.
+//! Gated behind the `overlay` feature; requires a desktop session to run.
+//!
+//! ## Window positioning on Wayland
+//!
+//! Wayland deliberately does not let a normal client place its own top-level
+//! window, so the configured corner is ignored and the compositor centres the
+//! overlay (this is why the `position` setting appears to do nothing on GNOME
+//! Wayland while working on X11 and macOS). A true corner anchor needs the
+//! `wlr-layer-shell` protocol, which GNOME does not implement. As a pragmatic
+//! fix, on a Wayland session Halo defaults to the **X11 (`XWayland`) backend**,
+//! where `OuterPosition` is honoured. Override with `WINIT_UNIX_BACKEND=wayland`
+//! to force native Wayland (accepting that the compositor controls position).
 
 use std::error::Error;
 use std::time::{Duration, Instant};
@@ -39,6 +48,8 @@ const TAU: f32 = 0.18;
 /// # Errors
 /// Returns an error if the hotkey manager or the windowing backend fail.
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
+    prefer_positionable_backend();
+
     let theme = Theme::by_name(&config.theme);
 
     let manager = GlobalHotKeyManager::new()?;
@@ -67,6 +78,27 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         Box::new(move |_cc| Ok(Box::new(HaloApp::new(config, theme, manager, toggle_id)))),
     )?;
     Ok(())
+}
+
+/// On a Linux Wayland session, prefer the X11 (`XWayland`) backend so the overlay
+/// can anchor to the configured corner. No-op on other platforms, and never
+/// overrides an explicit `WINIT_UNIX_BACKEND`. See the module docs.
+fn prefer_positionable_backend() {
+    #[cfg(target_os = "linux")]
+    {
+        let backend_chosen = std::env::var_os("WINIT_UNIX_BACKEND").is_some();
+        let on_wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();
+        if on_wayland && !backend_chosen {
+            tracing::info!(
+                target: "halo::overlay",
+                "Wayland session detected; using the X11 (`XWayland`) backend so the \
+                 overlay honours its `position`. Set WINIT_UNIX_BACKEND=wayland to force \
+                 native Wayland (the compositor then controls the position)."
+            );
+            // Safe in edition 2021; set before any windowing/thread starts.
+            std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+        }
+    }
 }
 
 /// Convert a theme [`Color`] into an egui [`Color32`].

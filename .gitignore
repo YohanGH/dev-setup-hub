@@ -1,0 +1,59 @@
+# --- Working files ---
+TASK.md
+
+# --- OS ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# --- Editors / IDEs ---
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+*.swp
+*.swo
+*~
+.*.sw?
+
+# --- Environment / secrets ---
+.env
+.env.*
+!.env.example
+*.local
+secrets.*
+*.pem
+*.key
+
+# --- Logs ---
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# --- Dependencies / build ---
+node_modules/
+dist/
+build/
+out/
+.cache/
+coverage/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+
+# --- Claude Code (keep shared config, ignore local state) ---
+.claude/settings.local.json
+.claude/*.local.json
+CLAUDE.local.md

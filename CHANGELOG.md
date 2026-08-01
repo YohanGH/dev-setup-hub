@@ -22,6 +22,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and lints clean on macOS and, via CI, on Linux. GPU-metric sampling (the `gpu`
   widget) remains a placeholder.
 
+### Fixed
+
+- **Overlay ignored its `position` on Wayland** (landed centred on Ubuntu/GNOME
+  while working on macOS/X11). Wayland does not let clients position their own
+  top-level windows, so `OuterPosition` was a no-op. Halo now defaults to the
+  X11 (`XWayland`) backend on a Wayland session, where corner anchoring works;
+  override with `WINIT_UNIX_BACKEND=wayland` to force native Wayland.
+
 
 - Cargo workspace scaffold with six crates: `halo-core`, `halo-config`,
   `halo-ui`, `halo-daemon`, `halo-themes`, `halo-cli`.

@@ -22,6 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and lints clean on macOS and, via CI, on Linux. GPU-metric sampling (the `gpu`
   widget) remains a placeholder.
 
+### Changed
+
+- Slimmed the README to launch + configuration only; moved vision, stack,
+  architecture, roadmap and development docs to [`docs/OVERVIEW.md`](docs/OVERVIEW.md).
+
 ### Fixed
 
 - **Overlay ignored its `position` on Wayland** (landed centred on Ubuntu/GNOME

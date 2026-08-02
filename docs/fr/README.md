@@ -14,6 +14,7 @@ Base de connaissances pour configurer et tirer le meilleur de
 |-------|------------------------|
 | [commands.md](commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage, et comment écrire les vôtres. |
 | [configuration.md](configuration.md) | Le modèle de configuration complet : global / projet / local, `settings.json`, mémoire `CLAUDE.md`, permissions, hooks et serveurs MCP. |
+| [claude-directory.md](claude-directory.md) | Carte annotée du répertoire `.claude/` — projet vs `~/.claude/`, avec l'arborescence complète et le rôle de chaque fichier/dossier. |
 | [best-practices.md](best-practices.md) | Conseils pratiques et assumés qui font une vraie différence au quotidien avec Claude Code. |
 | [rules-and-skills.md](rules-and-skills.md) | Faut-il ajouter des rules/skills façon Cursor ? Analyse raisonnée et guide de décision. |
 

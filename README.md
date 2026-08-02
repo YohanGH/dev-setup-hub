@@ -26,6 +26,8 @@ own global or per-project setup.
 | [`docs/best-practices.md`](docs/best-practices.md) | Practical tips that make a real difference day to day. |
 | [`.claude/`](.claude/) | Example shared configuration you can reuse. |
 
+> Docs are also available in French under [`docs/fr/`](docs/fr/).
+
 ### Quick start
 
 ```bash
@@ -60,10 +62,12 @@ projet.
 
 | Chemin | Description |
 |--------|-------------|
-| [`docs/commands.md`](docs/commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage. |
-| [`docs/configuration.md`](docs/configuration.md) | Comment configurer Claude Code (global / projet / local, `settings.json`, `CLAUDE.md`, MCP, hooks). |
-| [`docs/best-practices.md`](docs/best-practices.md) | Astuces concrètes qui font la différence au quotidien. |
+| [`docs/fr/commands.md`](docs/fr/commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage. |
+| [`docs/fr/configuration.md`](docs/fr/configuration.md) | Comment configurer Claude Code (global / projet / local, `settings.json`, `CLAUDE.md`, MCP, hooks). |
+| [`docs/fr/best-practices.md`](docs/fr/best-practices.md) | Astuces concrètes qui font la différence au quotidien. |
 | [`.claude/`](.claude/) | Exemple de configuration partagée réutilisable. |
+
+> Docs aussi disponibles en anglais dans [`docs/`](docs/).
 
 ### Démarrage rapide
 

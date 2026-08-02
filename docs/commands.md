@@ -1,9 +1,11 @@
+<!-- Language: English · [Français](fr/commands.md) -->
+
 # Claude Code commands
 
 A practical reference to Claude Code's **slash commands**, grouped by use case,
 plus how to write your own.
 
-> Source of truth: <https://docs.claude.com/en/docs/claude-code/slash-commands>.
+> Source of truth: <https://code.claude.com/docs/en/slash-commands>.
 > Claude Code changes often — run `/help` to see what's available in your
 > version.
 

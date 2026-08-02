@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `examples/web-architect-ts/` — a concrete, copy-pasteable Claude Code setup for
+  a cross-platform TypeScript stack (Vue 3/Quasar, NestJS REST API, Electron):
+  a lean `CLAUDE.md`, path-scoped `rules/`, `commands/`, and a cross-platform
+  script skill, plus the npm→yarn migration policy and a pragmatic testing rule.
+  Overview docs in EN (`examples/.../README.md`) and FR (`docs/fr/example-web-architect.md`).
 - `docs/claude-directory.md` (EN + FR) — an annotated map of the `.claude/`
   directory tree for both project and `~/.claude/` scopes, with a "where does it
   go?" guide.

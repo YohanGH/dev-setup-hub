@@ -17,6 +17,7 @@ Knowledge base for configuring and getting the most out of
 | [claude-directory.md](claude-directory.md) | Annotated map of the `.claude/` directory — project vs. `~/.claude/`, with a full directory tree and what each file/folder is for. |
 | [best-practices.md](best-practices.md) | Practical, opinionated tips that make a real difference when working with Claude Code every day. |
 | [rules-and-skills.md](rules-and-skills.md) | Should you add Cursor-style rules/skills? A reasoned take, with a decision guide. |
+| [example: web architect](../examples/web-architect-ts/README.md) | A concrete, copy-pasteable config for a cross-platform TS stack (Vue/Quasar, NestJS, Electron), with the yarn migration and pragmatic testing baked in. |
 
 ## How to use these docs
 

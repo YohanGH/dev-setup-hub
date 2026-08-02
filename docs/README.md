@@ -1,10 +1,12 @@
+<!-- Language: English · [Français](fr/README.md) -->
+
 # Documentation
 
 Knowledge base for configuring and getting the most out of
-[Claude Code](https://docs.claude.com/en/docs/claude-code).
+[Claude Code](https://code.claude.com/docs/en/overview).
 
-> Docs are written in English. The project [README](../README.md) is bilingual
-> (FR/EN).
+> Available in English and French (`fr/`). The project [README](../README.md)
+> is bilingual (FR/EN).
 
 ## Index
 
@@ -26,12 +28,12 @@ your own `~/.claude/` (global) or project `.claude/` setup.
 
 ## Official references
 
-- Claude Code documentation: <https://docs.claude.com/en/docs/claude-code>
-- Slash commands: <https://docs.claude.com/en/docs/claude-code/slash-commands>
-- Settings: <https://docs.claude.com/en/docs/claude-code/settings>
-- Memory (`CLAUDE.md`): <https://docs.claude.com/en/docs/claude-code/memory>
-- Hooks: <https://docs.claude.com/en/docs/claude-code/hooks>
-- MCP: <https://docs.claude.com/en/docs/claude-code/mcp>
+- Claude Code documentation: <https://code.claude.com/docs/en/overview>
+- Slash commands: <https://code.claude.com/docs/en/slash-commands>
+- Settings: <https://code.claude.com/docs/en/settings>
+- Memory (`CLAUDE.md`): <https://code.claude.com/docs/en/memory>
+- Hooks: <https://code.claude.com/docs/en/hooks>
+- MCP: <https://code.claude.com/docs/en/mcp>
 
 > Claude Code evolves quickly. When in doubt, the official documentation above
 > is the source of truth; this repo is a curated, practical companion.

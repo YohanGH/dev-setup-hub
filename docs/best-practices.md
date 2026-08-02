@@ -1,3 +1,5 @@
+<!-- Language: English · [Français](fr/best-practices.md) -->
+
 # Best practices with Claude Code
 
 Opinionated, practical advice that isn't strictly "configuration" but makes the

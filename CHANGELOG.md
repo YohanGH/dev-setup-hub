@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- French translation of the docs under `docs/fr/`, with language navigation
+  links between the English and French versions.
+- `docs/rules-and-skills.md` — a reasoned take on whether to adopt Cursor-style
+  rules/skills, with a decision guide (EN + FR).
+- Expanded `docs/configuration.md` with a curated set of `settings.json` keys
+  (model, git, session, UI, MCP approval, env vars, hooks) sourced from the
+  official settings documentation.
+
+### Changed
+
+- Updated documentation links to the `code.claude.com/docs` domain.
+
 ## [0.1.0] - 2026-08-01
 
 ### Added

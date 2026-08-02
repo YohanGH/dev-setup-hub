@@ -128,6 +128,28 @@ Suivre les règles de code dans @~/.claude/my-standards.md.
 
 Éditez à tout moment avec `/memory`.
 
+### Quelle taille maximale pour un `CLAUDE.md` ?
+
+Il n'y a **aucune limite stricte de caractères** : un `CLAUDE.md` est chargé **en
+entier**, quelle que soit sa longueur. Mais la longueur a un coût réel — il est
+injecté dans la fenêtre de contexte au démarrage de *chaque* session, consomme des
+tokens et, au-delà d'un certain point, *réduit* l'adhérence (Claude a plus à trier).
+
+- **Cible : moins de ~200 lignes** par fichier. C'est la recommandation officielle,
+  pas un plafond strict — le fichier se charge même s'il est plus long.
+- S'il grossit, n'empilez pas. Préférez :
+  - Déplacer les instructions propres à un type de fichier vers [`.claude/rules/`](https://code.claude.com/docs/en/memory#organize-rules-with-.claude%2Frules%2F)
+    avec une frontmatter `paths:`, pour qu'elles ne se chargent que sur les fichiers concernés.
+  - Déplacer les procédures répétables et ciblées vers un [Skill ou une commande](commands.md)
+    (chargés à la demande, pas à chaque session).
+  - Utiliser les imports `@chemin` pour organiser — mais attention, les fichiers
+    importés **se chargent aussi au lancement** : ça range, ça ne réduit pas le contexte.
+
+> La limite **200 lignes / 25 Ko** que vous avez peut-être vue concerne la
+> **mémoire automatique** (`MEMORY.md`, que Claude écrit lui-même) — seuls ses 200
+> premières lignes ou 25 Ko sont chargés. Ce plafond ne s'applique **pas** au
+> `CLAUDE.md`, toujours chargé en entier.
+
 ---
 
 ## 3. Serveurs MCP (outils supplémentaires)

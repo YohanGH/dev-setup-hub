@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `CLAUDE.md` size guidance in `configuration.md` and `best-practices.md`
+  (EN + FR): no hard limit, target under ~200 lines, and how the 200-line / 25 KB
+  cap only applies to auto-memory `MEMORY.md`.
 - French translation of the docs under `docs/fr/`, with language navigation
   links between the English and French versions.
 - `docs/rules-and-skills.md` — a reasoned take on whether to adopt Cursor-style

@@ -126,6 +126,27 @@ Follow the coding rules in @~/.claude/my-standards.md.
 
 Edit anytime with `/memory`.
 
+### How big can a `CLAUDE.md` be?
+
+There is **no hard character limit**: a `CLAUDE.md` is loaded **in full**, however
+long it is. But length has a real cost — it's injected into the context window at
+the start of *every* session, spending tokens and, past a point, *reducing*
+adherence (Claude has more to sift through).
+
+- **Target: under ~200 lines** per file. This is the official guideline, not a
+  hard cap — the file still loads if it's longer.
+- If it's growing, don't just keep appending. Instead:
+  - Move file-type-specific instructions to [`.claude/rules/`](https://code.claude.com/docs/en/memory#organize-rules-with-.claude%2Frules%2F)
+    with a `paths:` frontmatter, so they load only when Claude touches matching files.
+  - Move repeatable, task-specific procedures to a [Skill or command](commands.md)
+    (loaded on demand, not every session).
+  - Use `@path` imports for organization — but note imported files **still load at
+    launch**, so they don't reduce context, only tidy the file.
+
+> The **200-line / 25 KB** limit you may have seen applies to **auto-memory**
+> (`MEMORY.md`, which Claude writes itself) — only its first 200 lines or 25 KB
+> are loaded. That cap does **not** apply to `CLAUDE.md`, which always loads whole.
+
 ---
 
 ## 3. MCP servers (extra tools)

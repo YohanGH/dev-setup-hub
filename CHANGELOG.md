@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `docs/claude-directory.md` (EN + FR) — an annotated map of the `.claude/`
+  directory tree for both project and `~/.claude/` scopes, with a "where does it
+  go?" guide.
 - `CLAUDE.md` size guidance in `configuration.md` and `best-practices.md`
   (EN + FR): no hard limit, target under ~200 lines, and how the 200-line / 25 KB
   cap only applies to auto-memory `MEMORY.md`.

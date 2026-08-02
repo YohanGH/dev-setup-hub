@@ -1,9 +1,11 @@
+<!-- Language: English · [Français](fr/configuration.md) -->
+
 # Configuring Claude Code
 
 Everything you can hand to Claude Code to shape how it behaves — for a single
 project or globally across all of them.
 
-> Source of truth: <https://docs.claude.com/en/docs/claude-code/settings>.
+> Source of truth: <https://code.claude.com/docs/en/settings>.
 
 ---
 
@@ -162,7 +164,126 @@ Example `.mcp.json`:
 
 ---
 
-## 4. Choosing global vs. project
+## 4. More settings worth knowing
+
+`settings.json` accepts many keys. Below is a curated set of the most useful
+ones for everyday work. For the **exhaustive, always-current list**, see the
+official reference: <https://code.claude.com/docs/en/settings>.
+
+### Model & thinking
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `model` | string | Default model (read once at startup). |
+| `fallbackModel` | array | Fallback chain (up to 3) when the primary is overloaded. |
+| `effortLevel` | string | Persist effort: `"low"`, `"medium"`, `"high"`, `"xhigh"`. |
+| `alwaysThinkingEnabled` | boolean | Enable extended thinking by default. |
+| `maxThinkingTokens` | number | Cap thinking tokens. |
+
+### Git & commits
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `includeCoAuthoredBy` | boolean | Add a `Co-Authored-By` trailer to commits (default `false`). |
+| `attribution` | object | Customize commit / PR attribution text (or empty it out). |
+| `gitCommitTemplate` | string | Template for generated commit messages. |
+| `gitPushAutomatically` | boolean | Auto-push after commits (default `false`). |
+| `gitRemoteName` | string | Remote used for git operations (default `"origin"`). |
+
+### Session & context
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `autoCompactEnabled` | boolean | Auto-compact near the context limit (default `true`). |
+| `cleanupPeriodDays` | number | Delete old session transcripts after N days (default `30`). |
+| `fileCheckpointingEnabled` | boolean | Snapshot files before edits for `/rewind` (default `true`). |
+| `outputStyle` | string | Output formatting style (read at startup). |
+| `claudeMdExcludes` | array | Glob patterns of `CLAUDE.md` files to skip. |
+
+### UI & editor
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `theme` | string | `"dark"`, `"light"`, or `"auto"`. |
+| `editorMode` | string | `"normal"` or `"vim"`. |
+| `statusLine` | string/object | Custom status line. |
+| `spinnerTipsEnabled` | boolean | Show tips next to the activity spinner. |
+
+### MCP approval
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `enableAllProjectMcpServers` | boolean | Auto-approve every server in `.mcp.json`. |
+| `enabledMcpjsonServers` | array | Approve specific `.mcp.json` servers only. |
+| `disabledMcpjsonServers` | array | Reject specific `.mcp.json` servers. |
+
+### Auth & hooks
+
+| Key | Type | What it does |
+|-----|------|--------------|
+| `apiKeyHelper` | string | Command that outputs the auth value for API requests. |
+| `hooks` | object | Lifecycle hooks around tool calls and events (see below). |
+
+### Environment variables (`env`)
+
+Any variable set here is injected into every session. A few commonly used ones:
+
+| Variable | Purpose |
+|----------|---------|
+| `DISABLE_AUTO_COMPACT` | Disable auto-compacting. |
+| `DISABLE_AUTOUPDATER` | Disable auto-updates. |
+| `CLAUDE_CODE_ENABLE_TELEMETRY` | Toggle telemetry. |
+| `MAX_THINKING_TOKENS` | Cap thinking tokens (`0` disables). |
+
+```json
+{
+  "env": {
+    "DISABLE_AUTOUPDATER": "1",
+    "MY_PROJECT_ENV": "staging"
+  }
+}
+```
+
+### Hooks (quick look)
+
+Hooks let you run your own commands automatically around Claude's actions —
+for example, run a formatter after every edit, or block a tool before it runs.
+
+```json
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "npx prettier --write $CLAUDE_FILE_PATHS" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+Configure them interactively with `/hooks`. Full reference:
+<https://code.claude.com/docs/en/hooks>.
+
+### Permission modes
+
+`permissions.defaultMode` sets how Claude asks before acting. The available
+modes evolve across releases — check `/permissions` for what your version
+offers. Common values include `default` (ask as needed) and `acceptEdits`
+(auto-accept file edits). Prefer tuning via `/permissions` over guessing.
+
+### Enterprise / managed settings
+
+Organizations can enforce policy through **managed settings** that override
+everything else (allowlisting MCP servers, pinning versions, injecting an
+org-wide `CLAUDE.md`, etc.). These live in OS-specific system paths and are set
+by administrators — see the official docs if you manage a fleet.
+
+---
+
+## 5. Choosing global vs. project
 
 | Put it **globally** (`~/.claude/`) when… | Put it in the **project** (`.claude/`) when… |
 |------------------------------------------|----------------------------------------------|

@@ -1,0 +1,51 @@
+{
+  "$comment": "Example settings for a cross-platform TS monorepo. Copy to your repo's .claude/settings.json and adapt. Remove keys you don't want.",
+  "includeCoAuthoredBy": true,
+  "permissions": {
+    "defaultMode": "acceptEdits",
+    "allow": [
+      "Read(./**)",
+      "Bash(yarn install)",
+      "Bash(yarn typecheck)",
+      "Bash(yarn lint)",
+      "Bash(yarn format)",
+      "Bash(yarn test:*)",
+      "Bash(yarn build)",
+      "Bash(yarn workspace *)",
+      "Bash(npm ci)",
+      "Bash(npm run test:*)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git log:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(yarn publish:*)",
+      "Bash(npm publish:*)",
+      "Bash(yarn dlx *)",
+      "Bash(npx *)"
+    ],
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/secrets/**)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "$comment": "Format edited files automatically. Uses npx so it works before/after the yarn migration; swap to 'yarn prettier' once fully migrated.",
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "npx prettier --write --ignore-unknown $CLAUDE_FILE_PATHS"
+          }
+        ]
+      }
+    ]
+  }
+}

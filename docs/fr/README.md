@@ -17,6 +17,7 @@ Base de connaissances pour configurer et tirer le meilleur de
 | [claude-directory.md](claude-directory.md) | Carte annotée du répertoire `.claude/` — projet vs `~/.claude/`, avec l'arborescence complète et le rôle de chaque fichier/dossier. |
 | [best-practices.md](best-practices.md) | Conseils pratiques et assumés qui font une vraie différence au quotidien avec Claude Code. |
 | [rules-and-skills.md](rules-and-skills.md) | Faut-il ajouter des rules/skills façon Cursor ? Analyse raisonnée et guide de décision. |
+| [exemple : architecte web](example-web-architect.md) | Une config concrète et prête à copier pour une stack TS multiplateforme (Vue/Quasar, NestJS, Electron), avec la migration yarn et des tests pragmatiques. |
 
 ## Comment utiliser ces docs
 

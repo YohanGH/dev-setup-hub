@@ -16,6 +16,9 @@ biggest difference in day-to-day use. Adopt what fits.
   copying big blobs into the prompt.
 - **Be specific about the goal**, not the keystrokes. "Make the login form
   validate email and show inline errors" beats "edit line 42".
+- **Keep `CLAUDE.md` lean.** There's no hard size limit, but it loads every
+  session — aim for **under ~200 lines**. Push task-specific detail into
+  [`.claude/rules/`](configuration.md#how-big-can-a-claudemd-be) or a Skill.
 
 ## 2. Manage the context window
 

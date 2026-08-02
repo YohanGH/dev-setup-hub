@@ -18,6 +18,9 @@ qui vous convient.
 - **Soyez précis sur l'objectif**, pas sur les frappes clavier. « Fais valider
   l'email par le formulaire de login avec erreurs en ligne » vaut mieux que
   « édite la ligne 42 ».
+- **Gardez un `CLAUDE.md` léger.** Pas de limite stricte, mais il se charge à
+  chaque session — visez **moins de ~200 lignes**. Déportez le détail spécifique
+  vers [`.claude/rules/`](configuration.md#quelle-taille-maximale-pour-un-claudemd-) ou un Skill.
 
 ## 2. Gérez la fenêtre de contexte
 

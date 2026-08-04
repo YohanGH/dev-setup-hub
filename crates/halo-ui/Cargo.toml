@@ -12,7 +12,7 @@ repository.workspace = true
 # The GPU overlay backend (eframe/egui) and the settings GUI. Opt-in so the
 # default build stays lightweight and headless-friendly. Requires a desktop
 # session (X11 / Wayland / macOS / Windows) to run.
-overlay = ["dep:eframe", "dep:global-hotkey"]
+overlay = ["dep:eframe", "dep:global-hotkey", "dep:winit"]
 gui = ["overlay"]
 
 [dependencies]
@@ -28,6 +28,12 @@ eframe = { version = "0.31", optional = true, default-features = false, features
     "x11",
 ] }
 global-hotkey = { version = "0.6", optional = true }
+# Direct handle on eframe's winit (0.30) so we can force the XWayland backend
+# via `EventLoopBuilderExtX11`; eframe does not re-export winit. Feature
+# unification keeps this in lock-step with eframe's winit build.
+winit = { version = "0.30", optional = true, default-features = false, features = [
+    "x11",
+] }
 
 [lints]
 workspace = true

@@ -31,9 +31,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Overlay ignored its `position` on Wayland** (landed centred on Ubuntu/GNOME
   while working on macOS/X11). Wayland does not let clients position their own
-  top-level windows, so `OuterPosition` was a no-op. Halo now defaults to the
-  X11 (`XWayland`) backend on a Wayland session, where corner anchoring works;
-  override with `WINIT_UNIX_BACKEND=wayland` to force native Wayland.
+  top-level windows, so `OuterPosition` was a no-op. Halo now forces the X11
+  (`XWayland`) backend on a Wayland session, where corner anchoring works. The
+  first attempt set `WINIT_UNIX_BACKEND=x11`, but winit 0.30 removed that
+  variable, so it silently did nothing; the backend is now forced through
+  eframe's `event_loop_builder` hook (`EventLoopBuilderExtX11::with_x11`). Run
+  without `DISPLAY` (`env -u DISPLAY halo`) to force native Wayland.
 
 
 - Cargo workspace scaffold with six crates: `halo-core`, `halo-config`,

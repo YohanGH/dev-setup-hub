@@ -16,8 +16,13 @@
 //! Wayland while working on X11 and macOS). A true corner anchor needs the
 //! `wlr-layer-shell` protocol, which GNOME does not implement. As a pragmatic
 //! fix, on a Wayland session Halo defaults to the **X11 (`XWayland`) backend**,
-//! where `OuterPosition` is honoured. Override with `WINIT_UNIX_BACKEND=wayland`
-//! to force native Wayland (accepting that the compositor controls position).
+//! where `OuterPosition` is honoured.
+//!
+//! winit 0.30 removed the old `WINIT_UNIX_BACKEND` environment variable, so the
+//! backend is forced programmatically through eframe's `event_loop_builder`
+//! hook ([`winit::platform::x11::EventLoopBuilderExtX11::with_x11`]). This only
+//! kicks in when an X `DISPLAY` (`XWayland`) is actually available; unset
+//! `DISPLAY` to run under native Wayland and let the compositor place the window.
 
 use std::error::Error;
 use std::time::{Duration, Instant};
@@ -48,8 +53,6 @@ const TAU: f32 = 0.18;
 /// # Errors
 /// Returns an error if the hotkey manager or the windowing backend fail.
 pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
-    prefer_positionable_backend();
-
     let theme = Theme::by_name(&config.theme);
 
     let manager = GlobalHotKeyManager::new()?;
@@ -67,10 +70,11 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
         .with_taskbar(false)
         .with_inner_size(SIZE);
 
-    let options = eframe::NativeOptions {
+    let mut options = eframe::NativeOptions {
         viewport,
         ..Default::default()
     };
+    force_positionable_backend(&mut options);
 
     eframe::run_native(
         "halo",
@@ -80,23 +84,32 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-/// On a Linux Wayland session, prefer the X11 (`XWayland`) backend so the overlay
-/// can anchor to the configured corner. No-op on other platforms, and never
-/// overrides an explicit `WINIT_UNIX_BACKEND`. See the module docs.
-fn prefer_positionable_backend() {
+/// On a Linux Wayland session, force winit's X11 (`XWayland`) backend so the
+/// overlay can anchor to the configured corner. No-op on other platforms.
+///
+/// winit 0.30 dropped `WINIT_UNIX_BACKEND`, so we force the backend through
+/// eframe's `event_loop_builder` hook instead. We only intervene when `XWayland`
+/// is available (an X `DISPLAY` to fall back to); otherwise we leave winit on
+/// native Wayland rather than forcing X11 and failing to create a window. See
+/// the module docs.
+#[cfg_attr(not(target_os = "linux"), allow(unused_variables, unused_mut))]
+fn force_positionable_backend(options: &mut eframe::NativeOptions) {
     #[cfg(target_os = "linux")]
     {
-        let backend_chosen = std::env::var_os("WINIT_UNIX_BACKEND").is_some();
+        use winit::platform::x11::EventLoopBuilderExtX11;
+
         let on_wayland = std::env::var_os("WAYLAND_DISPLAY").is_some();
-        if on_wayland && !backend_chosen {
+        let have_xwayland = std::env::var_os("DISPLAY").is_some();
+        if on_wayland && have_xwayland {
             tracing::info!(
                 target: "halo::overlay",
-                "Wayland session detected; using the X11 (`XWayland`) backend so the \
-                 overlay honours its `position`. Set WINIT_UNIX_BACKEND=wayland to force \
-                 native Wayland (the compositor then controls the position)."
+                "Wayland session detected; forcing the X11 (`XWayland`) backend so the \
+                 overlay honours its `position`. Unset DISPLAY to run under native \
+                 Wayland (the compositor then controls the position)."
             );
-            // Safe in edition 2021; set before any windowing/thread starts.
-            std::env::set_var("WINIT_UNIX_BACKEND", "x11");
+            options.event_loop_builder = Some(Box::new(|builder| {
+                builder.with_x11();
+            }));
         }
     }
 }

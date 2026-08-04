@@ -52,7 +52,7 @@ L'overlay est transparent, sans bordure, toujours au-dessus et **click-through**
 > réglage `position` est ignoré et le compositeur centre l'overlay. Halo bascule
 > donc automatiquement sur le backend **X11 (XWayland)**, où l'ancrage dans un
 > coin fonctionne. Pour forcer le Wayland natif (position gérée par le
-> compositeur) : `WINIT_UNIX_BACKEND=wayland`.
+> compositeur), lancez Halo sans `DISPLAY` : `env -u DISPLAY halo`.
 
 ### Installation
 

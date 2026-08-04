@@ -1128,6 +1128,7 @@ dependencies = [
  "halo-core",
  "halo-themes",
  "tracing",
+ "winit",
 ]
 
 [[package]]

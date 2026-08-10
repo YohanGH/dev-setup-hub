@@ -53,6 +53,10 @@ L'overlay est transparent, sans bordure, toujours au-dessus et **click-through**
 > donc automatiquement sur le backend **X11 (XWayland)**, où l'ancrage dans un
 > coin fonctionne. Pour forcer le Wayland natif (position gérée par le
 > compositeur), lancez Halo sans `DISPLAY` : `env -u DISPLAY halo`.
+> Ce backend X11/XWayland nécessite `libxkbcommon-x11.so.0` sur le système. Sur
+> Debian/Ubuntu : `sudo apt install libxkbcommon-x11-0`. Sans cette lib,
+> `halo overlay`/`halo settings` paniquent au démarrage (`Library
+> libxkbcommon-x11.so could not be loaded`).
 
 ### Installation
 

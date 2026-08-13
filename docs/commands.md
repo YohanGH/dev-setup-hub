@@ -92,7 +92,7 @@ Subdirectories create namespaces: `.claude/commands/git/commit.md` →
 ```markdown
 ---
 description: Review the current branch against main
-argument-hint: [base-branch]
+argument-hint: "[base-branch]"
 allowed-tools: Bash(git diff:*), Bash(git log:*)
 model: claude-sonnet-5
 ---

@@ -1,7 +1,7 @@
 ---
 name: gate-status
 description: Run the project's quality checks and report what passes and what fails. Use when asked whether the tree is green, before committing, or after the gate blocked something.
-argument-hint: [--all]
+argument-hint: "[--all]"
 disable-model-invocation: true
 allowed-tools: Bash Read Grep
 ---

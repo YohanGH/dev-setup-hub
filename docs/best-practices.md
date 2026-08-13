@@ -41,7 +41,7 @@ biggest difference in day-to-day use. Adopt what fits.
   you're not clicking "approve" all day.
 - **Deny** reads of secrets: `.env`, `secrets/**`, key files.
 - Reserve broad or destructive commands for **ask** so you stay in the loop.
-- See the example [`.claude/settings.example.json`](../.claude/settings.example.json).
+- See the example [`.claude/settings.json`](../.claude/settings.json).
 
 ## 5. Never leak secrets
 

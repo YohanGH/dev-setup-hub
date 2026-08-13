@@ -1,0 +1,166 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 30,
+
+  "env": {
+    "CLAUDE_QUALITY_GATE": "warn",
+    "CLAUDE_PREFLIGHT_SCOPE": "changed"
+  },
+
+  "permissions": {
+    "defaultMode": "acceptEdits",
+
+    "allow": [
+      "Read(./**)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git stash:*)",
+      "Bash(${CLAUDE_PROJECT_DIR}/.claude/scripts/*.sh:*)"
+    ],
+
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(git reset --hard:*)",
+      "Bash(git rebase:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(npm publish:*)",
+      "Bash(yarn publish:*)"
+    ],
+
+    "deny": [
+      "Read(./**/.env)",
+      "Read(./**/.env.*)",
+      "Read(./**/*.pem)",
+      "Read(./**/*.key)",
+      "Read(./**/secrets/**)",
+      "Read(./**/dist/**)",
+      "Read(./**/build/**)",
+      "Read(./**/coverage/**)",
+      "Read(./**/*.generated.*)",
+      "Read(./vendor/**)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)"
+    ],
+
+    "additionalDirectories": []
+  },
+
+  "worktree": {
+    "sparsePaths": [
+      ".claude",
+      "apps/api",
+      "apps/web",
+      "packages/shared"
+    ],
+    "symlinkDirectories": [
+      "node_modules"
+    ]
+  },
+
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/session-start-context.sh",
+            "statusMessage": "Loading repo context",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/inject-ticket-context.sh",
+            "timeout": 15
+          }
+        ]
+      }
+    ],
+
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/pre-commit-gate.sh",
+            "statusMessage": "Running preflight before commit",
+            "timeout": 600
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/protect-paths.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/section-dispatch.sh",
+            "statusMessage": "Checking section boundaries",
+            "timeout": 20
+          }
+        ]
+      }
+    ],
+
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/format-edited.sh",
+            "async": true,
+            "timeout": 120
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "if": "Bash(git commit *)",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/post-commit-report.sh",
+            "async": true,
+            "timeout": 120
+          }
+        ]
+      }
+    ],
+
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/quality-gate.sh",
+            "statusMessage": "Quality gate",
+            "timeout": 600
+          }
+        ]
+      }
+    ]
+  },
+
+  "enabledPlugins": []
+}

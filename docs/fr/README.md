@@ -10,22 +10,49 @@ Base de connaissances pour configurer et tirer le meilleur de
 
 ## Sommaire
 
+### Fondamentaux
+
 | Guide | Ce que vous y trouvez |
 |-------|------------------------|
-| [commands.md](commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage, et comment écrire les vôtres. |
 | [configuration.md](configuration.md) | Le modèle de configuration complet : global / projet / local, `settings.json`, mémoire `CLAUDE.md`, permissions, hooks et serveurs MCP. |
 | [claude-directory.md](claude-directory.md) | Carte annotée du répertoire `.claude/` — projet vs `~/.claude/`, avec l'arborescence complète et le rôle de chaque fichier/dossier. |
+| [commands.md](commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage, et comment écrire les vôtres. |
 | [best-practices.md](best-practices.md) | Conseils pratiques et assumés qui font une vraie différence au quotidien avec Claude Code. |
+
+### Concevoir sa configuration
+
+| Guide | Ce que vous y trouvez |
+|-------|------------------------|
+| [choosing-a-primitive.md](choosing-a-primitive.md) | **Commencez ici.** Mémoire, règles, skills, commandes, sous-agents, hooks, plugins, MCP — laquelle pour quel comportement, et pourquoi le mauvais choix coûte cher. |
+| [frontmatter-reference.md](frontmatter-reference.md) | Chaque champ de chaque type de fichier configurable, et les *propriétés optimales* selon le rôle. |
 | [rules-and-skills.md](rules-and-skills.md) | Faut-il ajouter des rules/skills façon Cursor ? Analyse raisonnée et guide de décision. |
-| [exemple : architecte web](example-web-architect.md) | Une config concrète et prête à copier pour une stack TS multiplateforme (Vue/Quasar, NestJS, Electron), avec la migration yarn et des tests pragmatiques. |
+| [monorepo.md](monorepo.md) | Grands dépôts : `CLAUDE.md` et skills par répertoire, `claudeMdExcludes`, worktrees clairsemés, travail inter-packages. |
+| [context-economics.md](context-economics.md) | Ce que votre configuration coûte réellement par tour, comment le mesurer, et comment scoper hooks, plugins et autonomie à une seule section du dépôt. |
+
+### Automatiser
+
+| Guide | Ce que vous y trouvez |
+|-------|------------------------|
+| [hooks-and-automation.md](hooks-and-automation.md) | Événements de hooks, contrats d'entrée/sortie, le motif pre-commit façon husky, et les scripts shell qui valent le coup. |
+| [agents-and-autonomy.md](agents-and-autonomy.md) | Sous-agents, tâches de fond, sessions de fond et agent view, travail planifié — et comment rendre un agent sûr à laisser seul. |
+| [ticket-workflow.md](ticket-workflow.md) | Un pipeline ticket reproductible : cadrage → implémentation → revue → rapport, avec des artefacts au lieu de souvenirs. |
+
+### Configurations prêtes à l'emploi
+
+| | Ce que c'est |
+|--|--------------|
+| [template : monorepo d'entreprise](template-enterprise-monorepo.md) | Une configuration complète et fonctionnelle pour un dépôt multi-répertoires piloté par tickets : conventions, règles limitées au chemin, skills par répertoire, quatre sous-agents, sept hooks, et une batterie pre-commit partagée par les humains et Claude. |
+| [plugin : review-gate](../../plugins/review-gate/README.md) | Le même garde-fou qualité, en plugin portable et versionné. |
 
 ## Comment utiliser ces docs
 
 1. Commencez par [configuration.md](configuration.md) pour comprendre *où* vit
    la config et *comment* elle se superpose.
-2. Parcourez [commands.md](commands.md) pour savoir ce que vous pouvez piloter
-   depuis l'invite.
-3. Adoptez ce qui vous convient dans [best-practices.md](best-practices.md).
+2. Lisez [choosing-a-primitive.md](choosing-a-primitive.md) avant d'écrire la
+   moindre config — c'est la décision dont tout le reste découle.
+3. Copiez [le template](template-enterprise-monorepo.md) et adaptez-le, plutôt
+   que de partir d'un répertoire vide.
+4. Adoptez ce qui vous convient dans [best-practices.md](best-practices.md).
 
 Tout ici est fait pour être **copié et adapté** — prenez ce qui est utile pour
 votre propre configuration `~/.claude/` (globale) ou `.claude/` (projet).

@@ -14,6 +14,7 @@ Base de connaissances pour configurer et tirer le meilleur de
 
 | Guide | Ce que vous y trouvez |
 |-------|------------------------|
+| [exemples-utilisation.md](exemples-utilisation.md) | **Débutants : commencez ici.** Que taper, dans quel ordre, et ce qui doit se passer — prompts prêts à copier pour chaque commande, skill, sous-agent, hook, script et plugin du dépôt. |
 | [configuration.md](configuration.md) | Le modèle de configuration complet : global / projet / local, `settings.json`, mémoire `CLAUDE.md`, permissions, hooks et serveurs MCP. |
 | [claude-directory.md](claude-directory.md) | Carte annotée du répertoire `.claude/` — projet vs `~/.claude/`, avec l'arborescence complète et le rôle de chaque fichier/dossier. |
 | [commands.md](commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage, et comment écrire les vôtres. |

@@ -1,0 +1,13 @@
+{
+  "name": "review-gate",
+  "description": "Portable quality gate for Claude Code: refuses commits that bypass checks, guards generated and secret paths, and runs the project's own battery before a commit and before a turn ends.",
+  "version": "1.0.0",
+  "author": {
+    "name": "YohanGH",
+    "url": "https://github.com/YohanGH/claude-config"
+  },
+  "homepage": "https://github.com/YohanGH/claude-config/tree/main/plugins/review-gate",
+  "repository": "https://github.com/YohanGH/claude-config",
+  "license": "MIT",
+  "keywords": ["review", "hooks", "pre-commit", "quality"]
+}

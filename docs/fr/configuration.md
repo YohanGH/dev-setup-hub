@@ -328,7 +328,7 @@ sensibles dans des fichiers `*.local.*` gitignorés.
 
 ## Fichiers d'exemple dans ce dépôt
 
-- [`.claude/settings.example.json`](../../.claude/settings.example.json) — un
+- [`.claude/settings.json`](../../.claude/settings.json) — un
   point de départ à copier vers `.claude/settings.json` ou
   `~/.claude/settings.json`.
 

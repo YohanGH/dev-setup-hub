@@ -1,0 +1,25 @@
+{
+  "model": "claude-sonnet-5",
+  "includeCoAuthoredBy": false,
+  "cleanupPeriodDays": 30,
+  "env": {
+    "EXAMPLE_ENV": "value"
+  },
+  "permissions": {
+    "allow": [
+      "Read(./**)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)"
+    ],
+    "deny": [
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Read(./secrets/**)"
+    ],
+    "defaultMode": "acceptEdits"
+  }
+}

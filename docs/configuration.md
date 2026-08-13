@@ -320,7 +320,7 @@ gitignored.
 
 ## Example files in this repo
 
-- [`.claude/settings.example.json`](../.claude/settings.example.json) — a
+- [`.claude/settings.json`](../.claude/settings.json) — a
   starting point you can copy to `.claude/settings.json` or `~/.claude/settings.json`.
 
 See [best-practices.md](best-practices.md) for how to use all of this well.

@@ -49,7 +49,7 @@ qui vous convient.
 - **Refusez** la lecture des secrets : `.env`, `secrets/**`, fichiers de clés.
 - Réservez les commandes larges ou destructrices au mode **ask** pour rester
   dans la boucle.
-- Voir l'exemple [`.claude/settings.example.json`](../../.claude/settings.example.json).
+- Voir l'exemple [`.claude/settings.json`](../../.claude/settings.json).
 
 ## 5. Ne divulguez jamais de secrets
 

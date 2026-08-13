@@ -21,10 +21,14 @@ own global or per-project setup.
 
 | Path | Description |
 |------|-------------|
-| [`docs/commands.md`](docs/commands.md) | Reference of Claude Code slash commands, grouped by use case. |
-| [`docs/configuration.md`](docs/configuration.md) | How to configure Claude Code (global vs. project vs. local, `settings.json`, `CLAUDE.md`, MCP, hooks). |
-| [`docs/best-practices.md`](docs/best-practices.md) | Practical tips that make a real difference day to day. |
+| [`docs/`](docs/) | The knowledge base — configuration model, primitive-choice guide, frontmatter reference, hooks, agents, monorepos, ticket workflow. |
+| [`templates/enterprise-monorepo/`](templates/enterprise-monorepo/) | **A complete working setup** for a multi-directory, ticket-driven repo: conventions, path-scoped rules, per-directory skills, 4 subagents, 7 hooks, and a pre-commit battery shared by humans and Claude. |
+| [`plugins/review-gate/`](plugins/review-gate/) | The same quality gate as a portable, versioned plugin, with a local marketplace. |
 | [`.claude/`](.claude/) | Example shared configuration you can reuse. |
+
+Not sure where a behaviour belongs — memory, a rule, a skill, a subagent, a hook,
+or a plugin? Start with
+[`docs/choosing-a-primitive.md`](docs/choosing-a-primitive.md).
 
 > Docs are also available in French under [`docs/fr/`](docs/fr/).
 
@@ -62,10 +66,14 @@ projet.
 
 | Chemin | Description |
 |--------|-------------|
-| [`docs/fr/commands.md`](docs/fr/commands.md) | Référence des commandes slash de Claude Code, groupées par cas d'usage. |
-| [`docs/fr/configuration.md`](docs/fr/configuration.md) | Comment configurer Claude Code (global / projet / local, `settings.json`, `CLAUDE.md`, MCP, hooks). |
-| [`docs/fr/best-practices.md`](docs/fr/best-practices.md) | Astuces concrètes qui font la différence au quotidien. |
+| [`docs/fr/`](docs/fr/) | La base de connaissances — modèle de configuration, guide de choix de primitive, référence frontmatter, hooks, agents, monorepos, workflow ticket. |
+| [`templates/enterprise-monorepo/`](templates/enterprise-monorepo/) | **Une configuration complète et fonctionnelle** pour un dépôt multi-répertoires piloté par tickets : conventions, règles limitées au chemin, skills par répertoire, 4 sous-agents, 7 hooks, et une batterie pre-commit partagée par les humains et Claude. ([présentation FR](docs/fr/template-enterprise-monorepo.md)) |
+| [`plugins/review-gate/`](plugins/review-gate/) | Le même garde-fou qualité, en plugin portable et versionné, avec une marketplace locale. |
 | [`.claude/`](.claude/) | Exemple de configuration partagée réutilisable. |
+
+Vous hésitez sur l'endroit où placer un comportement — mémoire, règle, skill,
+sous-agent, hook ou plugin ? Commencez par
+[`docs/fr/choosing-a-primitive.md`](docs/fr/choosing-a-primitive.md).
 
 > Docs aussi disponibles en anglais dans [`docs/`](docs/).
 

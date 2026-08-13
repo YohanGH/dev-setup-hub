@@ -1,6 +1,6 @@
 ---
 description: Run the local quality battery (format, lint, typecheck, tests) the way CI will
-argument-hint: [--all | --changed | --quick]
+argument-hint: "[--all | --changed | --quick]"
 arguments: scope
 disable-model-invocation: true
 allowed-tools: Bash(${CLAUDE_PROJECT_DIR}/.claude/scripts/preflight.sh:*) Read Grep

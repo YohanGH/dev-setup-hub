@@ -567,7 +567,7 @@ Créez `.claude/commands/changelog.md` :
 ```markdown
 ---
 description: Rédiger l'entrée de changelog pour les commits de la branche
-argument-hint: [version]
+argument-hint: "[version]"
 disable-model-invocation: true
 allowed-tools: Read Grep Bash(git log:*) Bash(git diff:*)
 ---

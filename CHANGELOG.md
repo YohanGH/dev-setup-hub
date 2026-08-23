@@ -9,6 +9,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `templates/spec-driven/` — a ten-phase, artifact-per-phase pipeline where a
+  second model contradicts each artifact before a human approves it:
+  - `.claude/conventions/pipeline.md` — the contract every command reads: the
+    two steering files (`INDEX.md` mutable state, `JOURNAL.md` append-only
+    history), the two files per phase (artifact + challenge), phase statuses,
+    and staleness propagation when an approved artifact is edited.
+  - `.claude/conventions/challenge.md` — what a legitimate contradiction is:
+    four passes (premise, evidence, omission, falsifiability), the severity
+    scale, the three verdicts, and reconciliation rules.
+  - `.claude/commands/` — `/spec` orchestrator, `/spec-init` host-project
+    setup, `/spec-new`, `/spec-challenge`, and one command per phase:
+    `/spec-reflect`, `/spec-analyze`, `/spec-tasks`, `/spec-pseudo`,
+    `/spec-comment`, `/spec-implement`, `/spec-test`, `/spec-docs`,
+    `/spec-map`, `/spec-recap`.
+  - `.claude/agents/` — `challenger` (model B, `disallowedTools: Edit, Write`)
+    and `scout` (wide exploration, returns a `file:line` map, not file
+    contents).
+  - `.claude/templates/` — thirteen artifact skeletons, each carrying its own
+    honesty section (unverified claims, tests not verified, unbacked diagram
+    edges) which `10-recap.md` aggregates into a confidence statement.
+  - `.claude/scripts/checks.sh` — one quality battery shared by humans, git
+    hooks and Claude; reports an unconfigured check as `skip`, never as `pass`.
+- `docs/dual-ai-challenge.md` (+ `docs/fr/`) — the two-model method: the
+  asymmetry between builder, challenger and human arbitrator, three modes of
+  independence, a ready-to-paste prompt for running the B side on another
+  vendor's model, and the four failure modes (agreeable convergence,
+  manufactured findings, shared blind spots, arbitration by the interested
+  party) with the countermeasure built in for each.
+- `docs/fr/template-spec-driven.md` — French presentation of the template.
 - `templates/enterprise-monorepo/` — a complete, working Claude Code setup for a
   multi-directory, ticket-driven repository, meant to be copied and adapted per
   project:

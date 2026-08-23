@@ -36,12 +36,14 @@ Base de connaissances pour configurer et tirer le meilleur de
 | [hooks-and-automation.md](hooks-and-automation.md) | Événements de hooks, contrats d'entrée/sortie, le motif pre-commit façon husky, et les scripts shell qui valent le coup. |
 | [agents-and-autonomy.md](agents-and-autonomy.md) | Sous-agents, tâches de fond, sessions de fond et agent view, travail planifié — et comment rendre un agent sûr à laisser seul. |
 | [ticket-workflow.md](ticket-workflow.md) | Un pipeline ticket reproductible : cadrage → implémentation → revue → rapport, avec des artefacts au lieu de souvenirs. |
+| [dual-ai-challenge.md](dual-ai-challenge.md) | Deux modèles sur un artefact : l'un construit, l'autre attaque, un humain arbitre. Les quatre façons dont ce dispositif produit de la confiance sans information, et la contre-mesure de chacune. |
 
 ### Configurations prêtes à l'emploi
 
 | | Ce que c'est |
 |--|--------------|
 | [template : monorepo d'entreprise](template-enterprise-monorepo.md) | Une configuration complète et fonctionnelle pour un dépôt multi-répertoires piloté par tickets : conventions, règles limitées au chemin, skills par répertoire, quatre sous-agents, sept hooks, et une batterie pre-commit partagée par les humains et Claude. |
+| [template : spec-driven](template-spec-driven.md) | Dix phases, chacune écrivant un artefact durable, chacune contredite par un second modèle avant qu'un humain ne l'approuve. Pour le travail où construire la mauvaise chose coûte cher et où le raisonnement doit survivre à la session. |
 | [plugin : review-gate](../../plugins/review-gate/README.md) | Le même garde-fou qualité, en plugin portable et versionné. |
 
 ## Comment utiliser ces docs

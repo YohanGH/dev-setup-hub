@@ -36,12 +36,14 @@ Knowledge base for configuring and getting the most out of
 | [hooks-and-automation.md](hooks-and-automation.md) | Hook events, input/output contracts, the husky-style pre-commit pattern, and the shell scripts worth having. |
 | [agents-and-autonomy.md](agents-and-autonomy.md) | Subagents, background tasks, background sessions and agent view, scheduled work — and how to make an agent safe to leave alone. |
 | [ticket-workflow.md](ticket-workflow.md) | A reproducible ticket pipeline: scope → implement → review → report, with artifacts instead of recollection. |
+| [dual-ai-challenge.md](dual-ai-challenge.md) | Two models on one artifact: one builds, one attacks, a human arbitrates. The four ways this produces confidence without information, and the countermeasure for each. |
 
 ### Ready-made configurations
 
 | | What it is |
 |--|-----------|
 | [template: enterprise monorepo](../templates/enterprise-monorepo/README.md) | A complete working setup for a multi-directory, ticket-driven repo: conventions, path-scoped rules, per-directory skills, four subagents, seven hooks, and a pre-commit battery shared by humans and Claude. |
+| [template: spec-driven](../templates/spec-driven/README.md) | Ten phases, each writing a durable artifact, each contradicted by a second model before a human approves it. For work where building the wrong thing is expensive and the reasoning has to outlive the session. |
 | [plugin: review-gate](../plugins/review-gate/README.md) | The same quality gate as a portable, versioned plugin. |
 
 ## How to use these docs

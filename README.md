@@ -23,6 +23,7 @@ own global or per-project setup.
 |------|-------------|
 | [`docs/`](docs/) | The knowledge base — configuration model, primitive-choice guide, frontmatter reference, hooks, agents, monorepos, ticket workflow. |
 | [`templates/enterprise-monorepo/`](templates/enterprise-monorepo/) | **A complete working setup** for a multi-directory, ticket-driven repo: conventions, path-scoped rules, per-directory skills, 4 subagents, 7 hooks, and a pre-commit battery shared by humans and Claude. |
+| [`templates/spec-driven/`](templates/spec-driven/) | **A ten-phase pipeline** where every phase writes a durable artifact and a second model attacks it before a human approves it: reflection, analysis, tasks, pseudo-code, comment-driven scaffolding, implementation, tests, docs, project map, recap. |
 | [`plugins/review-gate/`](plugins/review-gate/) | The same quality gate as a portable, versioned plugin, with a local marketplace. |
 | [`.claude/`](.claude/) | Example shared configuration you can reuse. |
 
@@ -68,6 +69,7 @@ projet.
 |--------|-------------|
 | [`docs/fr/`](docs/fr/) | La base de connaissances — modèle de configuration, guide de choix de primitive, référence frontmatter, hooks, agents, monorepos, workflow ticket. |
 | [`templates/enterprise-monorepo/`](templates/enterprise-monorepo/) | **Une configuration complète et fonctionnelle** pour un dépôt multi-répertoires piloté par tickets : conventions, règles limitées au chemin, skills par répertoire, 4 sous-agents, 7 hooks, et une batterie pre-commit partagée par les humains et Claude. ([présentation FR](docs/fr/template-enterprise-monorepo.md)) |
+| [`templates/spec-driven/`](templates/spec-driven/) | **Un pipeline en dix phases** où chaque phase écrit un artefact durable, attaqué par un second modèle avant qu'un humain ne l'approuve : réflexion, analyse, task, pseudo-code, commentaires d'intention, implémentation, tests, doc, cartographie, recap. ([présentation FR](docs/fr/template-spec-driven.md)) |
 | [`plugins/review-gate/`](plugins/review-gate/) | Le même garde-fou qualité, en plugin portable et versionné, avec une marketplace locale. |
 | [`.claude/`](.claude/) | Exemple de configuration partagée réutilisable. |
 

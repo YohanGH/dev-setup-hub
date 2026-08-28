@@ -1,0 +1,374 @@
+" --------------------------------------------------------------
+" Summary Shortcut config
+" --------------------------------------------------------------
+" Only mappings that rely on builtin Vim commands.
+" No plugin command, no helper function defined elsewhere.
+"
+" Index:
+"	- [L-] Hard mode
+"	- [L-] General settings
+"		- [L-] Conceal markers
+"	- [L-] Syntax and colors
+"	- [L-] Files and backup
+"	- [L-] Buffers management
+"	- [L-] Tabs management
+"	- [L-] Indentation
+"	- [L-] Search, vimgrep and grep
+"		- [L-] Highlight
+"		- [L-] Vimgrep and grep
+"		- [L-] Replace
+"	- [L-] Moving around lines
+"	- [L-] Text edition
+"	- [L-] Multiple windows
+"	- [L-] Filetype shortcuts
+"
+" --------------------------------------------------------------
+" Hard mode
+" --------------------------------------------------------------
+
+" Disable directionnal shortcut
+map <up> <nop>
+map <down> <nop>
+map <left> <nop>
+map <right> <nop>
+imap <up> <nop>
+imap <down> <nop>
+imap <left> <nop>
+imap <right> <nop>
+
+" Le double point virgule remplace Esc
+:imap ;; <Esc>
+:map ;; <Esc>
+
+" --------------------------------------------------------------
+" General settings
+" --------------------------------------------------------------
+
+" Reload .vimrc
+nnoremap <F12> :so $MYVIMRC<CR>
+
+" No need for Ex mode
+nnoremap Q <NOP>
+
+" Open help in a vertical window
+cnoreabbrev help vert help
+
+" --- Conceal markers ---
+" Simplified reading mode, no edit ('set conceallevel' lives in .vim.base)
+if has('conceal')
+	nnoremap <silent> coi :set conceallevel=0<CR>:set concealcursor=niv<CR>
+	nnoremap <silent> coo :set conceallevel=2<CR>:set concealcursor=vc<CR>
+	nnoremap <silent> cop :set conceallevel=2<CR>:set concealcursor=niv<CR>
+	nnoremap <silent> com :set conceallevel=3<CR>:set concealcursor=niv<CR>
+endif
+
+"----------------------------------------------------------------
+" Scheme and colors
+"----------------------------------------------------------------
+
+" NC
+
+"----------------------------------------------------------------
+" Files and backup
+"----------------------------------------------------------------
+
+" Reload a file when it is changed from the outside
+nnoremap <F5> :e<CR>:echo "Buffer reloaded."<CR>
+
+" Allow us to use Ctrl-s and Ctrl-q as keybinds
+" Restore default behaviour when leaving Vim.
+if !has('nvim')
+	silent !stty -ixon
+	augroup CtrlBindings
+		autocmd!
+		autocmd VimLeave * silent !stty ixon
+	augroup END
+endif
+
+" Save the current buffer
+nnoremap <Leader>s :update<CR>
+
+" Save all buffers
+nnoremap <Leader>S :bufdo update<CR>
+
+" :W sudo saves the file
+" (useful for handling the permission-denied error)
+cnoremap WW w !sudo tee > /dev/null %
+
+" Work on buffer
+nnoremap yab :%y<CR>
+nnoremap dab :%d<CR>
+nnoremap vab ggVG
+
+"----------------------------------------------------------------
+" Buffers management
+"----------------------------------------------------------------
+
+" Move between buffers
+nnoremap <C-h> :bprev<CR>
+nnoremap <C-l> :bnext<CR>
+
+" Edit and explore buffers
+nnoremap <Leader>bb :edit <C-R>=expand("%:p:h")<CR>/
+nnoremap <Leader>bg :buffers<CR>:buffer<Space>
+
+" Copy the filepath to clipboard
+nnoremap <Leader>by :let @+=expand("%:p")<CR>
+
+" Switch CWD to the directory of the current buffer
+nnoremap <Leader>dd :lcd %:p:h<CR>:pwd<CR>
+
+"----------------------------------------------------------------
+" Tabs management
+"----------------------------------------------------------------
+
+" Create and close tabs
+nnoremap <Leader>td :tabclose<CR>
+nnoremap <Leader>to :tabonly<CR>
+
+" Open a new tab with the current buffer's path
+" Useful when editing files in the same directory
+nnoremap <Leader>tt :tabedit <C-R>=expand("%:p:h")<CR>/
+
+" Move tabs position
+nnoremap <Leader>tr :execute 'silent! tabmove ' . (tabpagenr()-2)<CR>
+nnoremap <Leader>ty :execute 'silent! tabmove ' . tabpagenr()<CR>
+
+"----------------------------------------------------------------
+" Indentation
+"----------------------------------------------------------------
+
+" Remap indentation
+nnoremap <TAB> >>
+nnoremap <S-TAB> <<
+
+vnoremap <TAB> >gv
+vnoremap <S-TAB> <gv
+
+inoremap <TAB> <C-i>
+inoremap <S-TAB> <C-d>
+
+" Toggle list (show/hide tabs and trailing chars)
+nnoremap <F6> :set list!<CR>:echo "Toggle list."<CR>
+
+" Retab the selection / the file
+nnoremap <Leader>tf :retab!<CR>
+vnoremap <Leader>tf :retab!<CR>
+
+" --------------------------------------------------------------
+" Search, vimgrep and grep
+" --------------------------------------------------------------
+
+" --- Highlight ---
+"----------------------------------------------------------------
+
+" Map <Space> to / (search)
+nnoremap <Space> /
+nnoremap <Leader><Space> ?
+
+" Highlight the word under the cursor and don't jump to next
+nnoremap <silent> <Leader><CR> :let @/='\<<C-R>=expand("<cword>")<CR>\>'<CR>:set hlsearch<CR>
+
+" Disable highlight
+nnoremap <Leader>m :noh<CR>
+
+" Next and prev centered
+nnoremap n nzz
+nnoremap N Nzz
+
+" --- Vimgrep and grep ---
+"----------------------------------------------------------------
+
+" Vimgrep the highlight in the current file
+nnoremap <Leader>vg :vimgrep /<C-R>//j %<CR>
+
+" Vimgrep the highlight in the current directory and subdirectories
+nnoremap <Leader>vf :vimgrep /<C-R>//j **/*.
+
+" Navigate between grep and vimgrep results
+nnoremap <Leader>n :cnext<CR>zz
+nnoremap <Leader>N :cprev<CR>zz
+
+" --- Replace ---
+"----------------------------------------------------------------
+
+" Replace the highlight in the current file
+nnoremap <Leader>r :%s/<C-R>///g<Left><Left>
+
+" Replace the highlight in the visual selection
+" Flag \%V --> Match only inside the visual selection
+vnoremap <Leader>r :s/\%V<C-R>/\%V//g<Left><Left>
+
+" Replace the highlight to all loaded buffers and arglist
+nnoremap <Leader>R :bufdo %s/<C-R>///ge<Left><Left><Left>
+
+" Replace the highlight to each valid entry in the quickfix
+nnoremap <Leader>Q :cdo %s/<C-R>///ge<Left><Left><Left>
+
+" Populate the arglist
+nnoremap <Leader>aa :argadd<space>
+nnoremap <Leader>ad :argdelete<space>
+nnoremap <Leader>an :args **/*.
+
+" --------------------------------------------------------------
+" Moving around lines
+" --------------------------------------------------------------
+
+" Show line numbers
+nnoremap <silent> <F3> :set number!<CR>:echo "Toggle line numbers."<CR>
+
+" Set relative line numbers
+nnoremap <silent> <F4> :set norelativenumber!<CR>:echo "Toggle relative line numbers."<CR>
+
+" Treat long lines as break lines (useful when moving around in them)
+nnoremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
+nnoremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
+
+vnoremap <silent> <expr> k (v:count == 0 ? 'gk' : 'k')
+vnoremap <silent> <expr> j (v:count == 0 ? 'gj' : 'j')
+
+nnoremap <Home> g^
+nnoremap <End> g$
+
+vnoremap <Home> g^
+vnoremap <End> g$
+
+" Join / split lines
+nnoremap <C-j> J
+nnoremap <C-k> i<CR><Esc>
+
+" Duplicate a line
+nnoremap cx yyP
+nnoremap cv yyp
+
+" --------------------------------------------------------------
+" Text edition
+" --------------------------------------------------------------
+
+" Toggle case of the char under the cursor
+nnoremap <Leader>z ~
+
+" Toggle and untoggle spell checking
+nnoremap <silent> <F8> :setlocal spell!<CR>:echo "Toggle spell checking."<CR>
+
+" Move to next misspelled word
+nnoremap zl ]s
+
+" Find the misspelled word before the cursor
+nnoremap zh [s
+
+" Suggest correctly spelled words
+nnoremap zp z=
+
+" Copy text into the clipboard
+vnoremap <Leader>y "+y
+
+" Paste text from the clipboard
+nnoremap <Leader>p "+p
+
+" Quickly select the text pasted from the clipboard
+nnoremap gV `[v`]
+
+" Yank everything from the cursor to the EOL
+nnoremap Y y$
+
+" Yank the last pasted text automatically
+vnoremap p pgvy
+
+" Isolate the current line
+nnoremap <Leader>o m`o<Esc>kO<Esc>``
+
+" Enter a new line Down from 'Normal Mode'
+nnoremap <Leader>f mao<Esc>`a
+
+" Enter a new line Up from 'Normal Mode'
+nnoremap <Leader>F maO<Esc>`a
+
+" --- Insert helpers ---
+" Prefix ';' (QWERTY). It is already an insert-mode prefix here (';;' = <Esc>),
+" so every helper hangs off it instead of adding a second dead key.
+" Free letters used: r, b, B, a, m, c -- plus ';p' buffer-local (see Filetype).
+
+" ;r -> []   square brackets, cursor placed inside
+inoremap ;r []<left>
+
+" ;b -> ()   round brackets, cursor placed inside
+inoremap ;b ()<left>
+
+" ;B -> {}   curly braces, cursor placed inside
+inoremap ;B {}<left>
+
+" ;a -> \    antislash
+" Optional on QWERTY: '\' is already a dedicated key (was 'ññ' on ES layout)
+inoremap ;a \
+
+" ;m -> {{  }}   moustache tag, cursor placed inside (was 'çç' on ES layout)
+inoremap ;m {{  }}<left><left><left>
+
+" ;c -> Vim's expression register, for inline math: ';c' 2*21 <CR> inserts 42
+inoremap ;c <C-r>=
+
+" --------------------------------------------------------------
+" Multiple windows
+" --------------------------------------------------------------
+
+" Remap wincmd
+map <Leader>, <C-w>
+
+" Split windows
+map <C-w>- :split<CR>
+map <C-w>. :vsplit<CR>
+map <C-w>j :close<CR>
+map <C-w>x :q!<CR>
+map <C-w>, <C-w>=
+
+" Resize windows
+if bufwinnr(1)
+	map + :resize +1<CR>
+	map - :resize -1<CR>
+	map < :vertical resize +1<CR>
+	map > :vertical resize -1<CR>
+endif
+
+" Last, previous and next window; and only one window
+nnoremap <silent> <C-w>l :wincmd p<CR>:echo "Last window."<CR>
+nnoremap <silent> <C-w>p :wincmd w<CR>:echo "Previous window."<CR>
+nnoremap <silent> <C-w>n :wincmd W<CR>:echo "Next window."<CR>
+nnoremap <silent> <C-w>o :wincmd o<CR>:echo "Only one window."<CR>
+
+" Remove the Windows ^M - when the encodings gets messed up
+noremap <Leader><BS> mmHmt:%s/<C-v><CR>//ge<CR>'tzt`m
+
+" Close the preview window
+nnoremap <silent> <Leader>. :pclose<CR>
+
+" Scroll the preview window
+if !has('nvim')
+	set <M-d>=
+	set <M-u>=
+endif
+
+nnoremap <silent> <M-d> :wincmd P<CR>5<C-e>:wincmd p<CR>
+nnoremap <silent> <M-u> :wincmd P<CR>5<C-y>:wincmd p<CR>
+
+" --------------------------------------------------------------
+" Filetype shortcuts
+" --------------------------------------------------------------
+
+augroup ShortcutFiletype
+	autocmd!
+
+	" ;p -> {%  %}   Jinja/Liquid statement, cursor placed inside
+	autocmd FileType html,markdown inoremap <buffer> ;p {%  %}<left><left><left>
+
+	" Word count of the file / of the selection
+	autocmd FileType markdown,text nnoremap <buffer> <silent> <Leader>cx g<C-g>
+	autocmd FileType markdown,text vnoremap <buffer> <silent> <Leader>cx g<C-g>
+
+	" Jump to the next / previous markdown link
+	autocmd FileType markdown,text
+				\ nnoremap <buffer> <silent> gl :call search('\v\[[^]]*]\([^)]*\)', 'W')<CR>
+	autocmd FileType markdown,text
+				\ nnoremap <buffer> <silent> gh :call search('\v\[[^]]*]\([^)]*\)', 'bW')<CR>
+
+augroup END

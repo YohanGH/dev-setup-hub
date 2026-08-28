@@ -1,0 +1,373 @@
+" --------------------------------------------------------------
+" Summary Base config
+" --------------------------------------------------------------
+
+" Index :
+"	- [L-24] General settings
+"		- [L-52] User for Header automatic
+"	- [L-59] User interface
+"	- [L-111] Syntax and colors
+"	- [L-118] Files and backup
+"	- [L-138] Buffers management
+"	- [L-161] Tab management
+"	- [L-184] Search, vimgrep and grep
+"	- [L-221] Moving around lines
+"	- [L-267] Multiple windows
+"	- [L-277] Tools
+"		- [L-280] Bracket paste mode
+"		- [L-290] Omni completion fallback
+"		- [L-301] Conceal markers
+"	- [L-312] Filetype settings
+"	- [L-359] Helper functions
+"
+" --------------------------------------------------------------
+" General settings
+" --------------------------------------------------------------
+
+" Use UTF-8 as default encoding
+set encoding=utf8
+
+" File encoding UTF-8
+scriptencoding utf-8
+
+" Enable local .vimrc config
+set exrc
+set secure
+
+" Lines of memory to remember
+set history=10000
+
+" Time delay for mapped sequences and key codes
+set timeoutlen=3000 ttimeoutlen=100
+
+" Update time
+set updatetime=250
+
+" Autoread a file when it is changed from the outside
+set autoread
+
+" Set inc/dec
+set nrformats-=octal
+
+" User for Header automatic
+" --------------------------------------------------------------
+
+let g:userName = 'yregnier'
+let g:mailName = 'yregnier@ankama.com'
+
+" --------------------------------------------------------------
+" User interface
+" --------------------------------------------------------------
+
+" shell
+"set shell=/bin/zsh
+
+" Set X lines to the cursor when moving vertically
+set scrolloff=0
+
+" Always show mode
+set showmode
+
+" Show command keys pressed
+set showcmd
+
+" Enable the wild menu
+set wildmenu
+
+" Show the current position
+set ruler
+
+" Height of the command line
+set cmdheight=2
+
+" Backspace works in insert mode
+set backspace=eol,start,indent
+" Don't redraw while executing macros
+set lazyredraw
+
+" Show matching brackets when text indicator is over them
+set showmatch
+
+" How many tenths of a second to blink when matching brackets
+set matchtime=2
+
+" No annoying sound on errors
+set noerrorbells
+
+" No annoying flashbang
+set novisualbell
+
+" Mouse
+set mouse=a
+
+" Highlight cursor line and cursor column
+set cursorline
+set nocursorcolumn
+
+" Always show the status line
+set laststatus=2
+
+" --------------------------------------------------------------
+" Syntax and colors
+" --------------------------------------------------------------
+" Syntax highlighting
+syntax enable
+"set background=dark
+
+" --------------------------------------------------------------
+" Files and backup
+" --------------------------------------------------------------
+
+" Disable swap files
+set noswapfile
+
+" No backup (use git instead)
+" To re-enable backups : set backup + set backupdir=~/.vim/backups/
+
+" (the directory must exist, otherwise E510)
+set nobackup
+
+" Use Unix as the standard file type
+set fileformats=unix,dos,mac
+
+" Enable filetype plugins
+filetype plugin on
+filetype indent on
+
+" --------------------------------------------------------------
+" Buffers management
+" --------------------------------------------------------------
+
+" Yank Buffer *
+set clipboard=unnamed
+
+" Buffer hidden when it is abandoned
+set hidden
+
+" Ignore case when autocompletes when browsing files
+set fileignorecase
+
+" Specify the behavior when switching between buffers
+try
+	set switchbuf=useopen,usetab,newtab
+	set showtabline=2
+catch
+endtry
+
+" Remember info about open buffers on close
+set viminfo^=%
+
+" --------------------------------------------------------------
+" Tab management
+" --------------------------------------------------------------
+" Enable autoindent & smartindent
+set autoindent
+set smartindent
+
+" Use tabs, no spaces
+set noexpandtab
+
+" Be smart when using tabs
+set smarttab
+
+" Tab size (in spaces)
+set shiftwidth=4
+set tabstop=4
+
+" Don't show tabs
+set list
+
+" Show tabs and end-of-lines
+set listchars=tab:┊\ ,trail:¬
+
+" --------------------------------------------------------------
+" Search, vimgrep and grep
+" --------------------------------------------------------------
+
+" Highlight search results
+set hlsearch
+
+" Makes search act like search in modern browsers
+set incsearch
+
+" Search, wrap around the end of the buffer
+set wrapscan
+
+" Ignore case when searching
+set ignorecase
+
+" When searching try to be smart about cases
+set smartcase
+
+" For regular expressions turn magic on
+set magic
+
+" Maximum amount of memory in Kbyte used for pattern matching
+set maxmempattern=1000
+
+" Interface management
+augroup QuickfixSetup
+	autocmd!
+	autocmd QuickfixCmdPre grep,grepadd,vimgrep,vimgrepadd,helpgrep copen
+augroup END
+
+" Grep settings
+set grepprg=grep\ -nHi
+
+" Jump to the results in buffers (first open window), not tabs
+set switchbuf=useopen
+
+" --------------------------------------------------------------
+" Moving around lines
+" --------------------------------------------------------------
+
+" Specify which commands wrap to another line
+set whichwrap+=<,>,h,l
+
+" Many jump commands move the cursor to the start of line
+set nostartofline
+
+" Wrap lines into the window
+set wrap
+
+" Don't break the words
+" Only works if I set nolist
+set linebreak
+let &showbreak = '↳ '
+
+" Stop automatic wrapping
+set textwidth=0
+
+" Column at 80 width
+set colorcolumn=80
+
+" Listings don't pause
+set nomore
+
+" Show line numbers
+set number
+set numberwidth=2
+
+" Set relative line numbers
+set relativenumber
+
+" Folding
+set foldmethod=marker
+
+" Return to last edit position when opening files
+augroup LastEditPosition
+	autocmd!
+	autocmd BufReadPost *
+		\ if line("'\"") > 0 && line("'\"") <= line("$") |
+		\ 	exe "normal! g`\"" |
+		\ endif
+augroup END
+
+" --------------------------------------------------------------
+" Multiple windows
+" --------------------------------------------------------------
+
+set winminheight=1
+set winminwidth=1
+set splitbelow
+set splitright
+set fillchars+=stlnc:―,vert:│,fold:―,diff:―
+
+" --------------------------------------------------------------
+" Tools
+" --------------------------------------------------------------
+
+" --- Bracket paste mode ---
+if has('patch-8.0.0238')
+	if &term =~? 'screen'
+		let &t_BE = "\e[?2004h"
+		let &t_BD = "\e[?2004l"
+		exec "set t_PS=\e[200~"
+		exec "set t_PE=\e[201~"
+	endif
+endif
+
+" --- Omni completion fallback, no destructive plugin autocomplete ---
+if has('autocmd') && exists('+omnifunc')
+	augroup OmniCompletionSetup
+		autocmd!
+		autocmd FileType *
+			\ if &omnifunc == "" |
+			\	setlocal omnifunc=syntaxcomplete#Complete |
+			\ endif
+	augroup END
+endif
+
+" --- Conceal markers : simplified reading mode, no edit ---
+" mappings 'coi', 'coo', 'cop', 'com' live in .vim.shortcut
+if has('conceal')
+	set conceallevel=0 concealcursor=niv
+endif
+
+" --------------------------------------------------------------
+" Filetype settings
+" --------------------------------------------------------------
+
+" Binary
+augroup binary
+	autocmd!
+	autocmd BufReadPre  *.bin let &bin=1
+	autocmd BufReadPost *.bin if &bin | %!xxd
+	autocmd BufReadPost *.bin set ft=xxd | endif
+	autocmd BufWritePre *.bin if &bin | %!xxd -r
+	autocmd BufWritePre *.bin endif
+	autocmd BufWritePost *.bin if &bin | %!xxd
+	autocmd BufWritePost *.bin set nomod | endif
+augroup END
+
+" Mail
+augroup mail
+	autocmd!
+	autocmd FileType mail setl spell
+	autocmd FileType mail setl spelllang=fr
+augroup END
+
+" SQL (it requires sqlparse)
+let g:omni_sql_no_default_maps = 1
+
+" MD
+augroup md
+	autocmd!
+	autocmd FileType markdown,text,yaml set expandtab
+augroup END
+
+" CSV
+augroup csv
+	autocmd!
+	autocmd BufRead,BufNewFile *.csv set filetype=csv
+augroup END
+
+" File headers
+augroup headers
+	autocmd!
+	autocmd BufNewFile *.py 0put =\"#!/usr/bin/env python\<nl>\#
+				\ -*- coding: utf-8 -*-\<nl>\"|$
+	autocmd BufNewFile *.sh 0put =\"#!/usr/bin/env bash\<nl>\"|$
+	autocmd BufNewFile *.js 0put =\"#!/usr/bin/env node\<nl>\"|$
+augroup END
+
+" --------------------------------------------------------------
+" Helper functions
+" --------------------------------------------------------------
+
+" Auto cleanup all windows
+augroup BufferCloseSetup
+	autocmd!
+	autocmd BufEnter * call <SID>CloseLastBuffer()
+augroup END
+
+" Close the last buffer if it's the last window
+" for quickfix and nofile
+function! s:CloseLastBuffer()
+	if &buftype ==# 'quickfix' || &buftype ==# 'nofile'
+		if winnr('$') < 2
+			quit!
+		endif
+	endif
+endfunction
+

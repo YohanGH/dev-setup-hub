@@ -1,0 +1,63 @@
+{
+  "$comment": "Per-package settings for apps/api. IMPORTANT: project settings load ONLY from the directory you start Claude in — they are not inherited from the repo root the way CLAUDE.md files are. Everything here applies to sessions started in apps/api/ and is inert when you start at the repo root. Keep it self-contained.",
+
+  "env": {
+    "$comment": "Package-scoped tuning. The API suite is slow, so the Stop gate only warns here.",
+    "CLAUDE_QUALITY_GATE": "warn",
+    "CLAUDE_PREFLIGHT_SCOPE": "changed"
+  },
+
+  "permissions": {
+    "additionalDirectories": [
+      "../../packages/shared"
+    ],
+    "allow": [
+      "Read(./**)",
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)"
+    ],
+    "deny": [
+      "Read(./**/dist/**)",
+      "Read(./**/build/**)",
+      "Read(./**/coverage/**)",
+      "Read(./**/*.generated.*)",
+      "Read(./**/.env)",
+      "Read(./**/.env.*)"
+    ]
+  },
+
+  "worktree": {
+    "$comment": "A worktree for API work checks out three directories, not the whole monorepo. Include .claude or the repo config is missing inside the worktree.",
+    "sparsePaths": [
+      ".claude",
+      "apps/api",
+      "packages/shared"
+    ],
+    "symlinkDirectories": [
+      "node_modules"
+    ]
+  },
+
+  "$comment_plugins": "Package-scoped plugins. A TypeScript language server earns its cost in this package and is pointless in a docs-only session. Comments cannot live inside a JSON array, so this note sits beside it.",
+  "enabledPlugins": [
+    "typescript-lsp@claude-plugins-official"
+  ],
+
+  "$comment_hooks": "Package-scoped hooks fire only for sessions started in apps/api/. For enforcement that must also work from the repo root, use .claude/hooks/section-dispatch.sh at the root instead.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/apps/api/.claude/hooks/check-contract-sync.sh",
+            "async": true,
+            "timeout": 60
+          }
+        ]
+      }
+    ]
+  }
+}

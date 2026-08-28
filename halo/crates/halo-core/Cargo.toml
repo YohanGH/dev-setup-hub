@@ -1,0 +1,18 @@
+[package]
+name = "halo-core"
+description = "System monitoring and sampling scheduler for the Halo HUD."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[dependencies]
+sysinfo.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

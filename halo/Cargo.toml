@@ -1,0 +1,53 @@
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "MIT"
+authors = ["YohanGH"]
+repository = "https://github.com/YohanGH/halo"
+homepage = "https://github.com/YohanGH/halo"
+readme = "README.md"
+keywords = ["hud", "overlay", "monitoring", "wayland", "system"]
+categories = ["command-line-utilities", "visualization"]
+
+# Dependencies shared across the workspace. Crates pull them in with
+# `dep.workspace = true` so versions stay aligned in a single place.
+[workspace.dependencies]
+halo-core = { path = "crates/halo-core", version = "0.1.0" }
+halo-config = { path = "crates/halo-config", version = "0.1.0" }
+halo-ui = { path = "crates/halo-ui", version = "0.1.0" }
+halo-daemon = { path = "crates/halo-daemon", version = "0.1.0" }
+halo-themes = { path = "crates/halo-themes", version = "0.1.0" }
+
+anyhow = "1"
+thiserror = "2"
+serde = { version = "1", features = ["derive"] }
+toml = "0.8"
+sysinfo = "0.33"
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "time", "signal"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+clap = { version = "4", features = ["derive"] }
+
+# Lints applied to every crate via `[lints] workspace = true`.
+[workspace.lints.rust]
+unsafe_code = "warn"
+missing_debug_implementations = "warn"
+unreachable_pub = "warn"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+module_name_repetitions = "allow"
+
+# Optimised release profile: small, fast binary suited to a background HUD.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+strip = true
+panic = "abort"

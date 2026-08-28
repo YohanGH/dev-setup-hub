@@ -92,7 +92,7 @@ Les sous-dossiers créent des espaces de noms :
 ```markdown
 ---
 description: Relire la branche courante par rapport à main
-argument-hint: [base-branch]
+argument-hint: "[base-branch]"
 allowed-tools: Bash(git diff:*), Bash(git log:*)
 model: claude-sonnet-5
 ---

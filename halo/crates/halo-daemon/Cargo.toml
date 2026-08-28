@@ -1,0 +1,28 @@
+[package]
+name = "halo-daemon"
+description = "Async sampling loop that drives the Halo overlay."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[features]
+# Enable the windowed overlay backend (Roadmap Phase 2). Off by default so the
+# terminal HUD builds without a windowing stack.
+overlay = ["halo-ui/overlay"]
+# Enable the graphical settings window (Roadmap Phase 12).
+gui = ["halo-ui/gui", "overlay"]
+
+[dependencies]
+halo-core.workspace = true
+halo-config.workspace = true
+halo-ui.workspace = true
+halo-themes.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+anyhow.workspace = true
+
+[lints]
+workspace = true

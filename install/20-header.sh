@@ -25,6 +25,8 @@ _DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 HUB_ROOT="$(dirname "$_DIR")"
 # shellcheck source=lib/fs.sh
 . "$HUB_ROOT/lib/fs.sh"
+# shellcheck source=lib/identity.sh
+. "$HUB_ROOT/lib/identity.sh"
 
 HEADER_SRC="$HUB_ROOT/config/header/plugin/stdheader.vim"
 
@@ -37,13 +39,21 @@ ui_section "${HUB_STEP:-3/6}" 'Header 42 — plugin Vim'
 fs_link "$HEADER_SRC" "$HOME/.vim/plugin/stdheader.vim"
 
 # --- Identite --------------------------------------------------------------- #
-# Le plugin lit USER et MAIL pour remplir l'en-tete. Ils vont dans
-# ~/.zsh_local, non versionne : l'identite est propre au poste et le zshrc
-# partage n'a pas a la porter.
-fs_append_once "$HOME/.zsh_local" 'MAIL=' \
-	'# Identite utilisee par le header 42 (plugin stdheader.vim).' \
-	"export USER=\"$(id -un)\"" \
-	'export MAIL="${USER}@proton.me"'
+# Le plugin lit USER et MAIL pour remplir l'en-tete. Rien n'est code en dur :
+# lib/identity.sh resout les valeurs, et elles atterrissent dans ~/.zsh_local,
+# non versionne — l'identite est propre au poste, le zshrc est partage.
+if identity_verifier_mail; then
+	fs_append_once "$HOME/.zsh_local" 'export MAIL=' \
+		'# Identite utilisee par le header 42 (plugin stdheader.vim).' \
+		"export USER=\"$(identity_user)\"" \
+		"export MAIL=\"$(identity_mail)\""
+	ui_ok 'identite' "$(identity_user) <$(identity_mail)>"
+	ui_info "source : $(identity_source HUB_MAIL)"
+else
+	# Sans adresse exploitable on n'ecrit rien plutot que d'inventer un
+	# domaine : le plugin fonctionne, l'en-tete affichera une valeur vide.
+	ui_skip 'identite' 'non ecrite — adresse a renseigner'
+fi
 
 ui_info 'Ouvre un fichier dans vim puis F1 (ou :Stdheader) pour inserer l en-tete.'
 ui_blank

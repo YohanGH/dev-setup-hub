@@ -161,10 +161,13 @@ alias clear='clear ; pwd ; ls'
 
 # --- Alias Security
 alias rm='rm -i'
-USER=yohangh
-export USER
 
 # --- Chargements deployes par dev-setup-hub ---------------------------------
+# Ce fichier etait termine par 'USER=yohangh ; export USER'. USER est lu par
+# ssh, git, sudo et le plugin stdheader ; ce zshrc etant partage entre les deux
+# postes et deploye en lien symbolique, la ligne faisait mentir chaque shell
+# des que le compte ne s'appelait pas yohangh. L'identite est resolue par
+# lib/identity.sh et deposee dans ~/.zsh_local, propre a la machine.
 # Ce fichier est lie symboliquement depuis config/zsh/zshrc : il est versionne.
 # Tout ce qui est propre a une machine va dans ~/.zsh_local, jamais ici.
 

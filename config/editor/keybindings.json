@@ -57,10 +57,21 @@
 
     // --- Fenetres ------------------------------------------------------- //
     // Masque barre laterale et barre d'activite d'un coup.
-    // Necessite l'extension ryuta46.multi-command.
+    //
+    // C'etait "multiCommand.makeRoom", qui exigeait l'extension
+    // ryuta46.multi-command et une entree multiCommand.commands dans
+    // settings.json. VSCode fournit "runCommands" depuis la 1.77, ecrit
+    // precisement pour rendre ces extensions inutiles : la sequence tient
+    // maintenant dans le raccourci lui-meme.
     {
         "key": "alt+1",
-        "command": "multiCommand.makeRoom"
+        "command": "runCommands",
+        "args": {
+            "commands": [
+                "workbench.action.toggleSidebarVisibility",
+                "workbench.action.toggleActivityBarVisibility"
+            ]
+        }
     },
     // Etait "ctrl-t" avec un tiret : VSCode attend un '+' comme separateur,
     // la regle etait donc ignoree en silence.

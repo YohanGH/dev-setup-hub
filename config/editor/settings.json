@@ -4,12 +4,26 @@
 /*                                                                                 */
 /*  By: YohanGH <YohanGH@proton.me>            __...--~~~~~-._   _.-~~~~~--...__        */
 /*                                       //               `V'               \\     */
-/*                                      //                 |                 \\    */ 
+/*                                      //                 |                 \\    */
 /*  Created: 2023-11-29 By: YohanGH    //__...--~~~~~~-._  |  _.-~~~~~~--...__\\   */
-/*  Updated: 2023-11-29 By: YohanGH   //__.....----~~~~._\ | /_.~~~~----.....__\\  */
+/*  Updated: 2026-08-29 By: YohanGH   //__.....----~~~~._\ | /_.~~~~----.....__\\  */
 /*                                   ====================\\|//==================== */
 /*                                                       `---`                     */
 /* ******************************************************************************* */
+
+// Configuration deployee a l'identique dans VSCode et VSCodium par
+// install/30-editor.sh.
+//
+// PARTI PRIS : aucune fonctionnalite ne depend d'une extension. Tout ce qui
+// suit s'appuie sur les capacites livrees avec l'editeur. Seuls les themes
+// restent des extensions — un theme de couleurs ne peut pas etre integre.
+//
+// Ce que l'editeur fait desormais seul, et qui demandait une extension avant :
+//   - coloration des paires de parentheses  (integree depuis la 1.60)
+//   - sequences de commandes                (runCommands, depuis la 1.77 ;
+//                                            voir keybindings.json)
+//   - formatage html/css/js/json/markdown   (formateurs livres)
+//   - git                                   (git.* et scm.* integres)
 
 {
 /* ---------------------------------------------------------------- */
@@ -25,6 +39,11 @@
     "editor.renderWhitespace": "trailing",
     "editor.suggest.insertMode": "replace",
 
+    // Remplace l'extension Bracket Pair Colorizer, depreciee par son auteur
+    // quand la fonction est entree dans l'editeur.
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+
 /* ---------------------------------------------------------------- */
 // --- Explorer
 /* ---------------------------------------------------------------- */
@@ -33,38 +52,32 @@
     "explorer.confirmDragAndDrop": false,
     "explorer.confirmDelete": false,
 
-//* ---------------------------------------------------------------- *
-// --- Cmake
 /* ---------------------------------------------------------------- */
-
-    "cmake.configureOnOpen": true,
-
-/* ---------------------------------------------------------------- */
-// --- debug
+// --- Debug
 /* ---------------------------------------------------------------- */
 
     "debug.onTaskErrors": "showErrors",
 
-// --- git
+/* ---------------------------------------------------------------- */
+// --- Git
+/* ---------------------------------------------------------------- */
+// Il y avait ici trois reglages gitlens.*, qui tous DESACTIVAIENT quelque
+// chose : blame en ligne, code lens, survol. Retirer l'extension rend ces
+// reglages sans objet — le comportement obtenu est deja celui par defaut.
 
     "git.openRepositoryInParentFolders": "never",
     "git.confirmSync": false,
     "git.enableSmartCommit": true,
+    "git.autofetch": true,
 
 /* ---------------------------------------------------------------- */
-// --- gitlens
-/* ---------------------------------------------------------------- */
-
-    "gitlens.currentLine.enabled": false,
-    "gitlens.codeLens.enabled": false,
-    "gitlens.hovers.currentLine.over": "line",
-
-/* ---------------------------------------------------------------- */
-// --- files
+// --- Files
 /* ---------------------------------------------------------------- */
 
     "files.autoSave": "onFocusChange",
     "files.defaultLanguage": "markdown",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
 
 /* ---------------------------------------------------------------- */
 // --- Emmet
@@ -79,11 +92,13 @@
     "workbench.tree.indent": 15,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.editor.enablePreview": false,
-    "workbench.iconTheme": "material-icon-theme",
 
+    // Les deux seules extensions conservees : un theme de couleurs et un
+    // theme d'icones n'ont pas d'equivalent integre.
     // Tokyo Hack (ajshortt.tokyo-hack) n'existe que sur le marketplace
-    // Microsoft : VSCodium, qui tire d'Open VSX, ne peut pas l'installer et
-    // retombera sur son theme par defaut. Voir docs/MANUAL.md.
+    // Microsoft : VSCodium, qui tire d'Open VSX, retombera sur son theme
+    // par defaut. Voir docs/MANUAL.md.
+    "workbench.iconTheme": "material-icon-theme",
     "workbench.colorTheme": "Tokyo Hack",
     "workbench.colorCustomizations": {
         "[Tokyo Hack]": {
@@ -93,7 +108,7 @@
     },
 
 /* ---------------------------------------------------------------- */
-// --- Editor
+// --- Apparence de l'editeur
 /* ---------------------------------------------------------------- */
 
     "editor.fontFamily": "Consolas, 'Courier New', monospace",
@@ -108,55 +123,47 @@
     "javascript.updateImportsOnFileMove.enabled": "always",
 
 /* ---------------------------------------------------------------- */
-// --- Multi Command
+// --- Formateurs par langage
 /* ---------------------------------------------------------------- */
-
-    "multiCommand.commands": [
-        {
-            "command": "multiCommand.makeRoom",
-            "sequence": [
-                "workbench.action.toggleSidebarVisibility",
-                // Etait "Workbench.action.togglesActivityBarVisibility" :
-                // majuscule initiale et "toggles" au lieu de "toggle", la
-                // commande n'existait pas et la sequence s'arretait la.
-                "workbench.action.toggleActivityBarVisibility"
-            ]
-        }
-    ],
-
-/* ---------------------------------------------------------------- */
-// --- Prettier And Language
-/* ---------------------------------------------------------------- */
+// Tous integres. Prettier reste installe en global par install/15-node.sh :
+// il s'utilise en ligne de commande ou via une tache, plus comme extension.
 
     "[html]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "vscode.html-language-features",
         "editor.suggest.insertMode": "replace",
         "editor.formatOnType": true
     },
     "[css]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.suggest.insertMode": "replace",
-        "cSpell.fixSpellingWithRenameProvider": false
+        "editor.defaultFormatter": "vscode.css-language-features",
+        "editor.suggest.insertMode": "replace"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
     },
     "[javascript]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "vscode.typescript-language-features",
         "editor.maxTokenizationLineLength": 2500
     },
     "[javascriptreact]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
     },
 
+    // Pas de defaultFormatter ici : l'editeur n'en livre aucun pour le C, et
+    // celui qui figurait avant etait esbenp.prettier-vscode — or Prettier ne
+    // sait pas formater le C. Le reglage n'a donc jamais rien fait.
     "[c]": {
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
         "editor.wordBasedSuggestions": "off",
         "editor.suggest.insertMode": "replace",
         "editor.semanticHighlighting.enabled": true
     },
     "[python]": {
         "diffEditor.ignoreTrimWhitespace": false,
-        "gitlens.codeLens.symbolScopes": [
-            "!Module"
-        ],
         "editor.formatOnType": true,
         "editor.wordBasedSuggestions": "off"
     },
@@ -170,9 +177,6 @@
             "comments": "off",
             "strings": "off",
             "other": "off"
-        },
-        "cSpell.fixSpellingWithRenameProvider": true,
-        "cSpell.advanced.feature.useReferenceProviderWithRename": true,
-        "cSpell.advanced.feature.useReferenceProviderRemove": "/^#+\\s/"
-    },
+        }
+    }
 }

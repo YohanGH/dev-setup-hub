@@ -1,43 +1,43 @@
 # Extensions deployees dans VSCode ET VSCodium par install/30-editor.sh.
 #
-# Identifiants complets 'editeur.nom' : c'est ce qu'attend la ligne de
-# commande. L'ancien List_of_Plugins.md ne donnait que les noms affiches,
-# inutilisables par 'code --install-extension'.
+# PARTI PRIS : la configuration ne depend d'AUCUNE extension pour ses
+# fonctionnalites. settings.json et keybindings.json n'utilisent que des
+# capacites livrees avec l'editeur.
+#
+# Il ne reste donc que l'apparence, qu'aucun editeur ne fournit sans
+# extension : un theme de couleurs et un theme d'icones.
 #
 # Syntaxe : un identifiant par ligne. '#' commente, ligne vide ignoree.
 #           '!' en prefixe = optionnel, une absence n'est pas une erreur.
-#
-# DEUX REGISTRES DIFFERENTS
-#   VSCode   tire du marketplace Microsoft.
-#   VSCodium tire d'Open VSX, qui n'a pas tout.
-# Les identifiants ci-dessous ont ete verifies presents sur Open VSX, sauf
-# mention contraire.
-
-# --- Git -------------------------------------------------------------------- #
-eamodio.gitlens
-
-# --- Mise en forme ---------------------------------------------------------- #
-esbenp.prettier-vscode
-
-# --- Web -------------------------------------------------------------------- #
-ritwickdey.LiveServer
 
 # --- Apparence -------------------------------------------------------------- #
 PKief.material-icon-theme
-!vscode-icons-team.vscode-icons
 
-# --- Raccourcis ------------------------------------------------------------- #
-# Fournit multiCommand.makeRoom, utilise par alt+1 dans keybindings.json.
-ryuta46.multi-command
-
-# --- ABSENT D'OPEN VSX ------------------------------------------------------ #
-# ajshortt.tokyo-hack : le theme reference par settings.json n'est publie que
-# sur le marketplace Microsoft. VSCodium ne peut pas l'installer et retombera
-# sur son theme par defaut. Contournement dans docs/MANUAL.md.
-# Alternative disponible sur les deux registres : enkia.tokyo-night
+# ajshortt.tokyo-hack n'est publie que sur le marketplace Microsoft. VSCodium
+# tire d'Open VSX et retombera sur son theme par defaut : c'est attendu, pas
+# une erreur. Contournement et alternative dans docs/MANUAL.md.
 !ajshortt.tokyo-hack
 
-# --- RETIRE ----------------------------------------------------------------- #
-# Bracket Pair Colorizer figurait dans List_of_Plugins.md. Son auteur l'a
-# deprecie : la fonction est integree a VSCode depuis la 1.60 et s'active par
-# "editor.bracketPairColorization.enabled", vrai par defaut.
+# --- RETIREES --------------------------------------------------------------- #
+# Chacune est remplacee par une capacite integree, sauf mention contraire.
+#
+#   eamodio.gitlens          -> git.* et scm.* integres. Les trois reglages
+#                               gitlens.* de settings.json ne faisaient que
+#                               DESACTIVER des fonctions : leur disparition
+#                               donne exactement le meme resultat.
+#   ryuta46.multi-command    -> commande runCommands, integree depuis la 1.77.
+#                               La sequence vit dans keybindings.json.
+#   esbenp.prettier-vscode   -> formateurs livres pour html, css, js, json,
+#                               markdown. Prettier reste installe en global
+#                               par install/15-node.sh, utilisable en ligne
+#                               de commande ou via une tache.
+#   CoenraadS.bracket-pair-* -> editor.bracketPairColorization.enabled,
+#                               integre depuis la 1.60.
+#   vscode-icons-team.*      -> doublon : deux themes d'icones etaient
+#                               declares alors que workbench.iconTheme n'en
+#                               designe qu'un. Celui-ci n'a jamais ete actif.
+#
+#   ritwickdey.LiveServer    -> SANS EQUIVALENT INTEGRE. C'est la seule perte
+#                               reelle de ce passage sans extensions. A la
+#                               place : `npx serve`, `python3 -m http.server`,
+#                               ou reinstaller l'extension au besoin.

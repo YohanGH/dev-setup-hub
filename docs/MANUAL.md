@@ -55,8 +55,26 @@ changer `workbench.colorTheme` et la clé `[Tokyo Hack]` dans
 **3. Ne rien faire** — VSCodium reste sur son thème par défaut, tout le reste
 de la configuration s'applique normalement.
 
-Les six autres extensions de `config/editor/extensions.list` ont été vérifiées
-présentes sur Open VSX : elles s'installent des deux côtés.
+`PKief.material-icon-theme`, la seule autre extension restante, est présente
+sur les deux registres et s'installe partout.
+
+### Pourquoi il n'en reste que deux
+
+La configuration ne dépend plus d'aucune extension pour ses **fonctionnalités**.
+Tout ce qui en demandait une est passé sur une capacité livrée avec l'éditeur :
+`runCommands` pour les séquences de touches, les formateurs intégrés pour
+html/css/js/json/markdown, `git.*` pour git, la coloration des paires de
+parenthèses intégrée depuis la 1.60.
+
+Une seule perte réelle : **Live Server n'a pas d'équivalent intégré**. À la
+place, depuis le dossier du projet :
+
+```bash
+python3 -m http.server 8000
+```
+
+Prettier, lui, n'est pas perdu : `install/15-node.sh` l'installe en global,
+il reste utilisable en ligne de commande et dans une tâche VSCode.
 
 ---
 

@@ -50,12 +50,13 @@ Three axes, kept separate on purpose:
 - **/lib/**: shared shell helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh`.
   `os.sh` is the only place that knows macOS from Debian.
 
+- **external.conf**: repos that stay in their own GitHub project and get
+  cloned at install time — never copied in here, where they would drift
+
 Still being folded in:
 
 - **/vim/**: moves under `config/` once its split into fragments is finished
 - **/debian/**: legacy scripts, kept as a working fallback until the new
   install path is validated on a real Debian box
-- **/claude/**, **/halo/**: vendored copies of standalone repos, fetched
-  instead of vendored in phase 4
 
 > A restructuring is in progress — see [REFACTOR_PLAN.md](REFACTOR_PLAN.md).

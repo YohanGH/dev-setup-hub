@@ -1,0 +1,17 @@
+# Formules Homebrew propres a macOS : paquets dont le nom differe de celui
+# d'apt, ou qui n'existent que d'un cote.
+#
+# Syntaxe : voir common.list. Les applications graphiques sont dans
+#           macos-cask.list, elles s'installent avec 'brew install --cask'.
+
+# --- Noms divergents -------------------------------------------------------- #
+# apt fournit 'python3' ; brew expose la formule sous 'python'.
+python
+# apt fournit 'fd-find' (binaire fdfind) ; brew fournit 'fd' directement.
+fd
+
+# --- Fournis par le systeme sous Debian ------------------------------------- #
+# Les versions macOS de ces outils sont les variantes BSD, plus pauvres que
+# celles de GNU. Les recuperer aligne le comportement des deux postes.
+!coreutils
+!gnu-sed

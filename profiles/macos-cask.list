@@ -1,0 +1,21 @@
+# Applications graphiques macOS, installees via 'brew install --cask'.
+#
+# Sous Debian chacune de ces applications demande son propre depot tiers ou un
+# .deb telecharge a la main : elles sont documentees dans docs/MANUAL.md plutot
+# qu'automatisees, pour ne pas ajouter cinq sources APT non verifiees au poste.
+#
+# Syntaxe : voir common.list.
+#
+# ABSENTS VOLONTAIREMENT (hors configuration automatique, sur demande) :
+#   - les navigateurs : Safari, Chrome, Brave  -> voir docs/MANUAL.md
+#   - Cursor : s'installe et se met a jour lui-meme ; sa configuration n'est
+#     pas versionnee ici, contrairement a VSCode et VSCodium (config/editor/).
+
+# --- Terminal --------------------------------------------------------------- #
+ghostty
+
+# --- Editeurs et applications ----------------------------------------------- #
+vscodium
+obsidian
+!beekeeper-studio
+!docker

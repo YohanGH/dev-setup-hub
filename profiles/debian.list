@@ -1,0 +1,24 @@
+# Paquets apt propres a Debian / Ubuntu : noms qui different de ceux de brew,
+# ou paquets sans equivalent macOS.
+#
+# Syntaxe : voir common.list.
+#
+# Les applications graphiques (Ghostty, VSCodium, Obsidian, BeeKeeper, Docker)
+# ne sont PAS ici : elles exigent un depot tiers par application. Voir
+# docs/MANUAL.md.
+
+# --- Noms divergents -------------------------------------------------------- #
+# brew expose 'python' ; apt fournit 'python3'.
+python3
+# brew expose 'fd' ; apt fournit 'fd-find', dont le binaire s'appelle 'fdfind'.
+# install/00-packages.sh cree le lien ~/.local/bin/fd pour aligner les deux OS.
+fd-find
+
+# --- Fournis nativement par macOS ------------------------------------------- #
+build-essential
+ca-certificates
+
+# --- Audit systeme ---------------------------------------------------------- #
+# Cite dans ankama/README.md. uCareSystem n'est pas dans les depots Debian
+# (PPA Ubuntu uniquement) : voir docs/MANUAL.md.
+!openscap-scanner

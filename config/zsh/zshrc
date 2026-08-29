@@ -163,3 +163,13 @@ alias clear='clear ; pwd ; ls'
 alias rm='rm -i'
 USER=yohangh
 export USER
+
+# --- Chargements deployes par dev-setup-hub ---------------------------------
+# Ce fichier est lie symboliquement depuis config/zsh/zshrc : il est versionne.
+# Tout ce qui est propre a une machine va dans ~/.zsh_local, jamais ici.
+
+# Alias partages — lien vers config/zsh/my-alias-v2.zsh
+[[ ! -f ~/.zsh_aliases ]] || source ~/.zsh_aliases
+
+# Reglages locaux non versionnes : PATH, jetons, surcharges par poste
+[[ ! -f ~/.zsh_local ]] || source ~/.zsh_local

@@ -10,9 +10,9 @@ permissions:
 
 env:
   # Portee du lint. Elle s'elargit a chaque phase de la refactorisation :
-  # les scripts historiques (setup/, debian/scripts/) sont remplaces en
-  # phases 3 et 4, ils entreront ici une fois reecrits.
-  LINT_PATHS: "lib"
+  # debian/scripts/ reste dehors tant qu'il sert de repli valide sous Debian,
+  # et entrera ici quand la phase 4 le retirera.
+  LINT_PATHS: "lib install install.sh"
   SHFMT_VERSION: v3.14.0
 
 jobs:
@@ -55,4 +55,16 @@ jobs:
           for f in $(find $LINT_PATHS -name '*.sh' -print | sort); do
             bash -n "$f" && echo "syntaxe OK  $f"
           done
-          bash -c '. lib/fs.sh; . lib/os.sh; echo "sourcage OK  os_id=$(os_id)"'
+          bash -c '. lib/profile.sh; . lib/fs.sh; echo "sourcage OK  os_id=$(os_id)"'
+
+      - name: Verifier les profils et le registre des etapes
+        run: |
+          # Le runner est Ubuntu : os_id doit y valoir 'debian'.
+          bash -c '. lib/profile.sh
+            [ "$(os_id)" = debian ] || { echo "os_id attendu debian"; exit 1; }
+            for p in common debian; do
+              profile_required "$(profile_path $p)" >/dev/null || exit 1
+            done
+            echo "profils lisibles"'
+          # --list ne doit rien installer et lister toutes les etapes.
+          ./install.sh --list

@@ -1,0 +1,29 @@
+# Paquets CLI dont le nom est IDENTIQUE sous Homebrew et apt.
+# Tout paquet dont le nom differe selon l'OS va dans macos.list / debian.list.
+#
+# Syntaxe : un paquet par ligne. '#' commente. Une ligne vide est ignoree.
+#           '!' en prefixe = optionnel : son absence n'est pas une erreur.
+
+# --- Base ------------------------------------------------------------------ #
+git
+curl
+zsh
+tmux
+tree
+htop
+
+# --- Outillage de developpement -------------------------------------------- #
+jq
+fzf
+tldr
+httpie
+
+# --- Dependances declarees par config/zsh/zshrc ----------------------------- #
+# Le zshrc charge les plugins omz 'autojump' et 'thefuck'. Absents de certains
+# depots Debian, ils restent optionnels : le shell fonctionne sans eux.
+!autojump
+!thefuck
+
+# --- Audit systeme ---------------------------------------------------------- #
+# Cite dans ankama/README.md. Present dans brew et apt sous le meme nom.
+!lynis

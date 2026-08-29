@@ -92,8 +92,9 @@ extension list into **both** VSCode and VSCodium.
 ```
 
 **6 — Obsidian.** Needs the path to your vault, since that is per-machine.
-Deploys the settings only — Obsidian re-downloads the community plugins from
-`community-plugins.json` on its own.
+Deploys the settings only. Community plugins are not versioned here and
+Obsidian does not reinstall them by itself — see
+[config/obsidian/plugins.md](config/obsidian/plugins.md) for the inventory.
 
 ```bash
 ./install/40-obsidian.sh ~/path/to/vault

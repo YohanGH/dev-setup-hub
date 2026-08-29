@@ -123,8 +123,16 @@ classement des blobs de l'historique. Ils font aussi entrer d'autres licences
 dans ton dépôt.
 
 Ta config réelle, elle, tient en quelques Ko : `app.json`, `appearance.json`,
-`hotkeys.json`, `community-plugins.json`. Or `community-plugins.json` **liste
-déjà les identifiants** des plugins — Obsidian sait les retélécharger seul.
+`hotkeys.json`, `community-plugins.json`.
+
+> **Correction (phase 7)** : j'avais écrit ici que `community-plugins.json`
+> listait les identifiants et qu'Obsidian saurait retélécharger les plugins
+> seul. **C'est faux sur les deux points.** Ce fichier est la liste des plugins
+> *activés*, pas une liste d'installation, et Obsidian n'y cherche rien à
+> télécharger. Il était de surcroît **vide** (`[]`) alors que quatorze plugins
+> étaient présents sur le disque. L'inventaire a donc été relevé depuis les
+> `manifest.json` et consigné dans `config/obsidian/plugins.md` avant
+> suppression.
 
 #### 🟠 P8 — Le découpage de vim est à moitié fait, et les deux moitiés sont déconnectées
 
@@ -171,7 +179,10 @@ Un même dépôt annonce deux licences incompatibles selon le répertoire. À tr
 
 #### 🟡 P11 — Cosmétique et cohérence
 
-- En-têtes 42 partout, mais avec des **dates futures fausses** (`Created: 2026/07/22`).
+- ~~En-têtes 42 avec des dates futures fausses.~~ **Constat erroné** : vérifié
+  le 2026-08-29, aucune date d'en-tête n'est postérieure à ce jour, et le
+  `Created: 2026/07/22` de `debian/` correspond exactement au premier commit du
+  dépôt amont `Configuration_Debian`.
 - **Trois styles d'ASCII art** différents (le `.--.`, le bateau de `CHANGELOG.md`
   et `List_of_Plugins.md`).
 - `SECURITY.md` est encore enveloppé dans une clôture ` ```md ` parasite
@@ -406,6 +417,10 @@ checkout passe de 23 Mo à ~1 Mo. **L'historique n'est pas réécrit** — le `.
 reste à ~9,5 Mo, aucun SHA ne change, aucun clone n'est invalidé.
 
 On conserve `app.json`, `appearance.json`, `hotkeys.json`, `core-plugins.json`,
-`community-plugins.json` (qui liste les identifiants, donc Obsidian retélécharge
-seul) et les thèmes maison. Ajout des motifs correspondants au `.gitignore` pour
+`community-plugins.json` et les thèmes maison.
+
+> **Correction (phase 7)** : `community-plugins.json` est la liste des plugins
+> **activés**, pas une liste d'installation — et elle était vide. Obsidian ne
+> réinstalle rien tout seul. L'inventaire des 14 plugins a donc été relevé dans
+> `config/obsidian/plugins.md` avant suppression des binaires. Ajout des motifs correspondants au `.gitignore` pour
 éviter que les plugins ne reviennent. À traiter en phase 7.

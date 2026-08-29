@@ -105,4 +105,3 @@ personne ne sait plus laquelle fait foi. C'est précisément ce qui était arriv
 |---|---|
 | `vim/` | son découpage en fragments est en cours ; passera sous `config/vim/` une fois terminé |
 | `debian/scripts/` | seul chemin éprouvé sur une vraie Debian, gardé en repli tant que `install/` n'y a pas tourné |
-| `config/obsidian/obsidian/plugins/` | 22 Mo de JavaScript tiers compilé, à retirer du HEAD |

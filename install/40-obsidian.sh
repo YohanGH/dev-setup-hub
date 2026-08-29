@@ -51,9 +51,11 @@ VAULT="${VAULT/#\~/$HOME}"
 DEST="$VAULT/.obsidian"
 
 # --- Reglages --------------------------------------------------------------- #
-# Fichiers de reglages uniquement. Les plugins tiers ne sont PAS deployes :
-# community-plugins.json liste leurs identifiants et Obsidian les retelecharge
-# lui-meme, ce qui evite de trimballer 22 Mo de JavaScript compile.
+# Fichiers de reglages uniquement. Les plugins tiers ne sont pas versionnes :
+# 22 Mo de JavaScript compile appartenant a d'autres projets. Attention,
+# community-plugins.json n'est PAS une liste d'installation, c'est la liste des
+# plugins ACTIVES : Obsidian n'y cherche rien a telecharger. La reinstallation
+# se fait par l'interface. Inventaire dans config/obsidian/plugins.md.
 for f in app.json appearance.json core-plugins.json \
 	core-plugins-migration.json community-plugins.json hotkeys.json; do
 	if [ -f "$SRC/$f" ]; then
@@ -72,6 +74,6 @@ if [ -d "$SRC/themes" ]; then
 	done
 fi
 
-ui_info 'Les plugins communautaires seront retelecharges par Obsidian'
-ui_info 'au premier lancement, depuis community-plugins.json.'
+ui_info 'Les plugins communautaires ne sont pas deployes : Obsidian ne les'
+ui_info 'reinstalle pas seul. Liste et procedure dans config/obsidian/plugins.md.'
 ui_blank

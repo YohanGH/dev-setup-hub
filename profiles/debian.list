@@ -5,7 +5,7 @@
 #
 # Les applications graphiques (Ghostty, VSCodium, Obsidian, BeeKeeper, Docker)
 # ne sont PAS ici : elles exigent un depot tiers par application. Voir
-# docs/MANUAL.md.
+# docs/MANUAL.md. KeePassXC fait exception — il est dans les depots officiels.
 
 # --- Noms divergents -------------------------------------------------------- #
 # brew expose 'python' ; apt fournit 'python3'.
@@ -13,6 +13,12 @@ python3
 # brew expose 'fd' ; apt fournit 'fd-find', dont le binaire s'appelle 'fdfind'.
 # install/00-packages.sh cree le lien ~/.local/bin/fd pour aligner les deux OS.
 fd-find
+
+# --- Gestionnaire de mots de passe ------------------------------------------ #
+# Seule application graphique automatisee sous Debian : elle est dans les
+# depots officiels, donc aucune source tierce a ajouter. Version plus ancienne
+# que le cask macOS selon la suite — voir docs/MANUAL.md.
+keepassxc
 
 # --- Fournis nativement par macOS ------------------------------------------- #
 build-essential

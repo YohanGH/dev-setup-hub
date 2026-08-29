@@ -19,3 +19,7 @@ vscodium
 obsidian
 !beekeeper-studio
 !docker
+
+# --- Gestionnaire de mots de passe ------------------------------------------ #
+# Le cask fournit aussi le binaire keepassxc-cli, utilisable en script.
+keepassxc

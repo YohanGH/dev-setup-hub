@@ -80,6 +80,33 @@ ne prend pas à ta place.
 Une fois installées, leurs configurations versionnées se déploient normalement
 par `install.sh`.
 
+### L'exception : KeePassXC
+
+**KeePassXC est la seule application graphique automatisée des deux côtés**,
+parce qu'il est dans les **dépôts officiels Debian et Ubuntu** : aucune source
+tierce à ajouter, et les correctifs de sécurité arrivent par la distribution.
+
+| | Canal retenu | Version |
+|---|---|---|
+| macOS | `brew install --cask keepassxc` | 2.7.12 |
+| Debian 12 · 13 | `apt install keepassxc` | 2.7.4 · 2.7.10 |
+| Ubuntu 22.04 · 24.04 · 25.04 | `apt install keepassxc` | 2.6.6 · 2.7.6 · 2.7.9 |
+
+Flathub livrerait 2.7.12 partout, mais imposerait d'installer flatpak **et**
+d'ajouter un dépôt tiers. Recevoir les correctifs par la distribution vaut mieux
+que courir après la dernière version.
+
+> **À savoir si tu partages la même base entre les deux postes.**
+> Le format **KDBX 4.1** est apparu avec KeePassXC 2.7.0. Une base enregistrée
+> en 4.1 par le macOS (2.7.12) **ne s'ouvrira pas** sous Ubuntu 22.04, qui est
+> resté en 2.6.6. Garde la base en **KDBX 4.0** tant que les deux postes ne
+> sont pas en 2.7 — c'est un choix au moment de créer la base, modifiable
+> ensuite dans *Base de données → Paramètres → Sécurité*.
+
+La base elle-même n'est évidemment pas versionnée : `.gitignore` exclut
+`*.kdbx` et `*.kdb`. Même chiffrée, une base commitée resterait pour toujours
+dans l'historique.
+
 ## Sécurité et maintenance
 
 | Outil | Statut |

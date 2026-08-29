@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  push:
+    branches: [main, "refacto/**"]
+  pull_request:
+
+permissions:
+  contents: read
+
+env:
+  # Portee du lint. Elle s'elargit a chaque phase de la refactorisation :
+  # les scripts historiques (setup/, debian/scripts/) sont remplaces en
+  # phases 3 et 4, ils entreront ici une fois reecrits.
+  LINT_PATHS: "lib"
+  SHFMT_VERSION: v3.14.0
+
+jobs:
+  shell:
+    name: Lint shell
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer shellcheck
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq shellcheck
+          shellcheck --version
+
+      - name: Installer shfmt
+        run: |
+          curl -fsSL -o /tmp/shfmt \
+            "https://github.com/mvdan/sh/releases/download/${SHFMT_VERSION}/shfmt_${SHFMT_VERSION}_linux_amd64"
+          sudo install -m 0755 /tmp/shfmt /usr/local/bin/shfmt
+          shfmt --version
+
+      - name: shellcheck
+        run: |
+          # Les libs sont sourcees, jamais executees : shellcheck a besoin
+          # qu'on lui annonce le dialecte et qu'on l'autorise a suivre les
+          # 'source' relatifs entre elles.
+          shellcheck --shell=bash --external-sources --source-path=lib \
+            $(find $LINT_PATHS -name '*.sh' -print | sort)
+
+      - name: shfmt
+        run: |
+          # -d : echoue en affichant le diff. Indentation par tabulations
+          # (defaut de shfmt), conforme aux scripts existants du depot.
+          shfmt -d -ln bash $(find $LINT_PATHS -name '*.sh' -print | sort)
+
+      - name: Verifier que les libs sont sourcables
+        run: |
+          for f in $(find $LINT_PATHS -name '*.sh' -print | sort); do
+            bash -n "$f" && echo "syntaxe OK  $f"
+          done
+          bash -c '. lib/fs.sh; . lib/os.sh; echo "sourcage OK  os_id=$(os_id)"'

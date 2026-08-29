@@ -14,9 +14,8 @@
 
 > Scripts d'installation et de configuration **« clé en main »** pour un
 > nouveau poste **Debian / Ubuntu** : outils système, shell `zsh`
-> (oh-my-zsh + powerlevel10k), éditeur `vim`, header 42 personnalisé
-> **ANKAMA**, et génération d'un coffre **Obsidian entreprise**
-> `ANKAMA_OBSIDIAN`.
+> (oh-my-zsh + powerlevel10k), éditeur `vim`, header 42, et génération
+> d'un coffre **Obsidian entreprise** `ANKAMA_OBSIDIAN`.
 
 ---
 
@@ -58,7 +57,7 @@ cd scripts
 
 ./init_debian.sh      # 1. Outils système + zsh + oh-my-zsh + powerlevel10k
 ./install_vim.sh      # 2. Configuration Vim (prettier désactivé par défaut)
-./set_header.sh       # 3. Header 42 personnalisé "ANKAMA"
+./set_header.sh       # 3. Header 42 (plugin stdheader.vim)
 ./setup_obsidian.sh   # 4. Génère le coffre Obsidian ANKAMA_OBSIDIAN
 ```
 
@@ -69,7 +68,7 @@ cd scripts
 | `install.sh` | Orchestrateur : exécute les scripts dans l'ordre, avec confirmations. |
 | `init_debian.sh` | Vérifie/installe `curl htop tree fd python3 tmux`, puis `oh-my-zsh` + `powerlevel10k` et déploie `zshrc` + alias. |
 | `install_vim.sh` | Déploie `.vimrc`, installe `vim-plug`, lance `PlugInstall`. **Prettier désactivé par défaut.** |
-| `set_header.sh` | Installe le plugin `stdheader.vim` avec la bannière **ANKAMA** centrée. Exporte `USER`/`MAIL`. |
+| `set_header.sh` | Installe le plugin `stdheader.vim` depuis `../config/header/`. Exporte `USER`/`MAIL`. |
 | `setup_obsidian.sh` | Crée l'arborescence `ANKAMA_OBSIDIAN`, les templates et le fichier `AI-SECURITY.md`. |
 
 ### Notes d'usage Vim
@@ -101,14 +100,14 @@ Configuration_Debian/
 │   ├── init_debian.sh
 │   ├── install_vim.sh
 │   ├── set_header.sh
-│   ├── setup_obsidian.sh
-│   └── assets/
-│       └── stdheader.vim  # Header 42 personnalisé ANKAMA
+│   └── setup_obsidian.sh
 ├── Configuration_Vim/     # Source de la config Vim (.vimrc, syntax/)
-├── Configuration_zshrc/   # Source de la config zsh (zshrc, alias)
-├── Configuration_Header/  # Source d'origine du header 42
 └── data_for_obsidian/     # Modèles Obsidian (LINT_CONFIG.md, ...)
 ```
+
+> Les sources zsh et header ont quitté ce dossier pour `../config/zsh/` et
+> `../config/header/`, partagées avec macOS. Ces scripts sont remplacés par
+> `../install/` en phase 3 — voir [`../REFACTOR_PLAN.md`](../REFACTOR_PLAN.md).
 
 ## Sécurité
 

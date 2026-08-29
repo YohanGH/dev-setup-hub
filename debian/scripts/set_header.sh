@@ -11,15 +11,18 @@
 #                                                                              #
 # **************************************************************************** #
 #
-# Installe le header 42 personnalisé "ANKAMA" (plugin Vim stdheader.vim) et
-# exporte USER / MAIL pour renseigner automatiquement l'en-tête.
+# Installe le header 42 (plugin Vim stdheader.vim) et exporte USER / MAIL pour
+# renseigner automatiquement l'en-tête.
 #
 # Usage : ./set_header.sh
 #
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-HEADER_SRC="$SCRIPT_DIR/assets/stdheader.vim"
+HUB_ROOT="$(dirname "$(dirname "$SCRIPT_DIR")")"
+# Copie unique du plugin, partagée avec macOS. La variante ANKAMA qui vivait
+# dans scripts/assets/ a été abandonnée. Ce script est remplacé en phase 3.
+HEADER_SRC="$HUB_ROOT/config/header/plugin/stdheader.vim"
 
 c_reset='\033[0m'; c_ok='\033[0;32m'; c_info='\033[0;34m'; c_warn='\033[0;33m'
 log()  { printf "${c_info}[*]${c_reset} %s\n" "$*"; }
@@ -47,7 +50,7 @@ fi
 # --- 2. Installation du plugin header ------------------------------------- #
 mkdir -p "$HOME/.vim/plugin"
 cp "$HEADER_SRC" "$HOME/.vim/plugin/stdheader.vim"
-ok "Header ANKAMA installé : ~/.vim/plugin/stdheader.vim"
+ok "Header installé : ~/.vim/plugin/stdheader.vim"
 
 # --- 3. Rappel identité dans .vimrc (fallback si USER/MAIL absents) -------- #
 if [ -f "$HOME/.vimrc" ] && ! grep -q "g:userName" "$HOME/.vimrc"; then
@@ -62,14 +65,13 @@ fi
 
 cat <<'EOF'
 
-  Header ANKAMA prêt.
+  Header prêt.
   Ouvre un fichier dans vim puis appuie sur F1 (ou :Stdheader) :
 
   /* ************************************************************************** */
-  /*                                A N K A M A                                 */
-  /*                                A N K A M A                                 */
   /*                                                                            */
   /*                                                    .--.    No              */
+  /*   fichier.c                                       |o_o |    Pain           */
   ...
 
 EOF

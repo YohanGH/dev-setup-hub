@@ -69,7 +69,7 @@ chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
 
 run_step "init_debian.sh"    "1/4  Outils système + zsh + oh-my-zsh + powerlevel10k"
 run_step "install_vim.sh"    "2/4  Configuration Vim (Prettier désactivé)"
-run_step "set_header.sh"     "3/4  Header 42 personnalisé ANKAMA"
+run_step "set_header.sh"     "3/4  Header 42 (plugin stdheader.vim)"
 run_step "setup_obsidian.sh" "4/4  Coffre Obsidian ANKAMA_OBSIDIAN"
 
 echo ''

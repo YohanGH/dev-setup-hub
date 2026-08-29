@@ -100,9 +100,12 @@ Obsidian does not reinstall them by itself — see
 ./install/40-obsidian.sh ~/path/to/vault
 ```
 
-**7 — External repos.** Clones the repos declared in `external.conf` instead of
-vendoring them here. `halo` is Linux-only and off by default because building
-it needs a full Rust toolchain.
+**7 — External repos.** Fetches the repos declared in `external.conf` instead
+of vendoring them here: a release binary when one matches the platform, else
+the release's source (pinned to that tag, not the moving default branch), else
+a plain clone if the repo has never published a release. `halo` is Linux-only
+and off by default — even as a binary, a HUD overlay isn't an everyday dev
+tool.
 
 ```bash
 ./install/50-external.sh
@@ -129,7 +132,7 @@ Three axes, kept separate on purpose — see
 | `install/` | **how** — one file per step, never branches on the OS |
 | `config/` | **the content** — `zsh/`, `editor/`, `header/`, `obsidian/` |
 | `lib/` | shared helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh` |
-| `external.conf` | repos that stay in their own project and get cloned |
+| `external.conf` | repos that stay in their own project — fetched from their latest release, cloned only if they have none |
 
 Adding a step means dropping a file in `install/`: it registers itself.
 

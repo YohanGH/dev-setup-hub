@@ -1,0 +1,451 @@
+name: Integration
+
+# Exécute les scripts d'installation POUR DE VRAI, sur les runners jetables
+# de GitHub — jamais sur un poste personnel. C'est précisément le terrain que
+# ci.yml (lint statique) ne couvre pas : est-ce que 00-packages.sh installe
+# vraiment les paquets, est-ce que le zshrc déployé se charge sans erreur sous
+# un vrai zsh, est-ce que le binaire de release téléchargé a la bonne somme de
+# contrôle. Rien ici ne touche à un HOME ou un gestionnaire de paquets réels :
+# chaque job tourne sur une VM qui sera détruite à la fin.
+#
+# ci.yml reste le retour rapide (secondes). Celui-ci est le retour complet
+# (minutes) : les deux tournent en parallèle, aucun ne bloque l'autre.
+
+on:
+  push:
+    branches: [main, "refacto/**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: integration-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --------------------------------------------------------------------- #
+  #    Bibliotheques : os.sh, fs.sh, identity.sh, sur le VRAI OS du runner  #
+  # --------------------------------------------------------------------- #
+  lib:
+    name: lib/ — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: os.sh détecte le vrai OS de ce runner
+        run: |
+          . lib/os.sh
+          echo "os_id=$(os_id)  pkg_manager=$(pkg_manager)"
+          case "${{ matrix.os }}" in
+            macos-*)  [ "$(os_id)" = macos  ] && [ "$(pkg_manager)" = brew ] ;;
+            ubuntu-*) [ "$(os_id)" = debian ] && [ "$(pkg_manager)" = apt  ] ;;
+          esac
+
+      - name: fs.sh — lien, copie, sauvegarde, ajout idempotent
+        run: |
+          . lib/fs.sh
+          T="$(mktemp -d)"
+          echo source > "$T/src"
+
+          # fs_link : cree, puis idempotent, puis archive un vrai fichier.
+          fs_link "$T/src" "$T/dst"
+          [ -L "$T/dst" ] || { echo "fs_link n'a pas cree de lien"; exit 1; }
+          fs_link "$T/src" "$T/dst"
+
+          echo reel > "$T/dst2"
+          fs_link "$T/src" "$T/dst2"
+          [ -f "$T/dst2.bak."* ] || { echo "fs_link n'a pas archive le fichier reel"; exit 1; }
+          [ -L "$T/dst2" ] || { echo "fs_link n'a pas remplace par un lien"; exit 1; }
+
+          # fs_copy : idempotent au contenu identique, sans re-timestamper.
+          fs_copy "$T/src" "$T/copie"
+          avant="$(stat -f%m "$T/copie" 2>/dev/null || stat -c%Y "$T/copie")"
+          sleep 1
+          fs_copy "$T/src" "$T/copie"
+          apres="$(stat -f%m "$T/copie" 2>/dev/null || stat -c%Y "$T/copie")"
+          [ "$avant" = "$apres" ] || { echo "fs_copy a retouche un contenu identique"; exit 1; }
+
+          # fs_append_once : une seule occurrence apres deux appels.
+          fs_append_once "$T/rc" MARQUEUR MARQUEUR ligne
+          fs_append_once "$T/rc" MARQUEUR MARQUEUR ligne
+          [ "$(grep -c MARQUEUR "$T/rc")" = 1 ] || { echo "fs_append_once a duplique le bloc"; exit 1; }
+
+          echo "fs.sh : tous les scenarios verifies"
+
+      - name: identity.sh — cascade complete, y compris le rejet du noreply GitHub
+        run: |
+          . lib/identity.sh
+          T="$(mktemp -d)"
+
+          # 1. Variable d'environnement, priorite maximale. Le prefixe doit
+          # porter sur le 'bash -c' a l'interieur de la substitution, pas sur
+          # le '[' qui l'englobe : sinon la sous-coquille ne voit jamais la
+          # variable, puisque la substitution est evaluee avant que le
+          # prefixe ne s'applique a la commande externe.
+          valeur="$(HUB_MAIL="env@example.org" IDENTITY_FILE="$T/absent" bash -c '. lib/identity.sh; identity_mail')"
+          [ "$valeur" = "env@example.org" ] || {
+            echo "priorite HUB_MAIL non respectee (obtenu: $valeur)"; exit 1; }
+
+          # 2. Fichier local si la variable est absente.
+          printf 'HUB_MAIL="fichier@example.org"\n' > "$T/identity"
+          [ "$(IDENTITY_FILE="$T/identity" bash -c '. lib/identity.sh; identity_mail')" = "fichier@example.org" ] || {
+              echo "lecture du fichier d'identite incorrecte"; exit 1; }
+
+          # 3. Une adresse de confidentialite GitHub doit etre rejetee, pas juste lue.
+          if IDENTITY_FILE="$T/absent" HUB_MAIL="1+x@users.noreply.github.com" \
+             bash -c '. lib/identity.sh; identity_verifier_mail' >/dev/null 2>&1; then
+            echo "une adresse noreply GitHub a ete acceptee a tort"; exit 1
+          fi
+          echo "identity.sh : cascade et garde-fou verifies"
+
+  # --------------------------------------------------------------------- #
+  #    Contenu statique : Vimscript et JSONC                              #
+  # --------------------------------------------------------------------- #
+  content:
+    name: Contenu — Vimscript et JSONC
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: config/header/plugin/stdheader.vim charge sans erreur
+        run: |
+          # -Nu NONE : aucune config reelle chargee, execution a blanc.
+          # Seul stdheader.vim est verifie : les fragments de vim/ sont un
+          # travail en cours, non branches dans .vimrc, donc hors du contrat
+          # que cette CI garantit. Ils rejoindront ce job une fois sous
+          # config/vim/ (cf. docs/ARCHITECTURE.md, "ce qui n'est pas range").
+          vim -Nu NONE -es \
+            -c 'source config/header/plugin/stdheader.vim' \
+            -c 'qa!'
+
+      - name: JSON et JSONC valides
+        run: |
+          python3 lib/check-jsonc.py \
+            config/editor/settings.json \
+            config/editor/keybindings.json
+          for f in config/obsidian/obsidian/*.json; do
+            python3 -c "import json,sys; json.load(open(sys.argv[1]))" "$f" \
+              && echo "valide    $f"
+          done
+
+  # --------------------------------------------------------------------- #
+  #    Paquets systeme : brew et apt, pour de vrai, sur un runner jetable  #
+  # --------------------------------------------------------------------- #
+  packages:
+    name: 00-packages.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer le profil complet
+        run: UI_ASSUME_YES=1 ./install/00-packages.sh
+
+      - name: Verifier que les paquets communs sont bien la
+        run: |
+          . lib/profile.sh
+          manquants=0
+          for pkg in $(profile_required "$(profile_path common)"); do
+            has_cmd "$pkg" || { echo "manquant : $pkg"; manquants=1; }
+          done
+          exit "$manquants"
+
+      - name: Verifier le lien fd sous Debian (fd-find -> fd)
+        if: runner.os == 'Linux'
+        run: command -v fd && fd --version
+
+      - name: Verifier les casks macOS
+        if: runner.os == 'macOS'
+        run: |
+          for app in ghostty vscodium obsidian keepassxc; do
+            brew list --cask --versions "$app" || { echo "cask manquant : $app"; exit 1; }
+          done
+
+  # --------------------------------------------------------------------- #
+  #    Shell : oh-my-zsh, p10k, plugins, et le zshrc charge sous un vrai zsh #
+  # --------------------------------------------------------------------- #
+  shell:
+    name: 10-shell.sh + 15-node.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: zsh est present (installe par 00-packages.sh en usage reel)
+        run: |
+          . lib/os.sh
+          pkg_install zsh git curl
+
+      - run: ./install/10-shell.sh
+
+      - name: ~/.zshrc et ~/.zsh_aliases sont des liens vers le depot
+        run: |
+          [ -L "$HOME/.zshrc" ] || { echo "~/.zshrc n'est pas un lien"; exit 1; }
+          [ -L "$HOME/.zsh_aliases" ] || { echo "~/.zsh_aliases n'est pas un lien"; exit 1; }
+
+      - name: Le zshrc deploye se charge sous un vrai zsh, sans erreur fatale
+        run: |
+          # Le code de sortie est le contrat : un compinit bruyant peut
+          # avertir sur stderr sans faire echouer le shell, ce n'est pas ce
+          # qu'on garde ici pour rouge/vert — seul un shell qui ne charge
+          # PAS du tout casserait reellement la session de l'utilisateur.
+          ZSH_DISABLE_COMPFIX=true zsh -i -c 'echo shell_ok'
+
+      - name: 15-node.sh — nvm, Node LTS, prettier
+        run: ./install/15-node.sh
+
+      - name: Node et prettier sont utilisables
+        run: |
+          export NVM_DIR="$HOME/.nvm"
+          . "$NVM_DIR/nvm.sh"
+          node --version
+          npm exec --yes -- true 2>/dev/null || true
+          command -v prettier || npx --yes prettier --version
+
+  # --------------------------------------------------------------------- #
+  #    Header Vim : lien + variables d'identite, avec une identite fournie #
+  # --------------------------------------------------------------------- #
+  header:
+    name: 20-header.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fournir une identite (sans ca, l'etape n'ecrit rien — comportement voulu)
+        run: |
+          mkdir -p "$HOME/.config/dev-setup-hub"
+          printf 'HUB_USER="ci"\nHUB_MAIL="ci@example.org"\n' \
+            > "$HOME/.config/dev-setup-hub/identity"
+
+      - run: ./install/20-header.sh
+
+      - name: Le plugin est lie et l'identite ecrite dans ~/.zsh_local
+        run: |
+          [ -L "$HOME/.vim/plugin/stdheader.vim" ] || { echo "plugin non lie"; exit 1; }
+          grep -q 'export MAIL="ci@example.org"' "$HOME/.zsh_local" || {
+            echo "identite non ecrite dans ~/.zsh_local"; exit 1; }
+
+      - name: Le plugin installe se charge sous vim, depuis son emplacement final
+        run: |
+          if command -v vim >/dev/null 2>&1; then
+            vim -Nu NONE -es -c "source $HOME/.vim/plugin/stdheader.vim" -c 'qa!'
+          fi
+
+  # --------------------------------------------------------------------- #
+  #    Editeurs : VSCodium reel sur macOS (cask rapide), config sur Linux  #
+  # --------------------------------------------------------------------- #
+  editor:
+    name: 30-editor.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Installer VSCodium (macOS uniquement — pas de depot tiers sous Linux)
+        if: runner.os == 'macOS'
+        run: brew install --cask vscodium
+
+      - name: Sans editeur installe, l'etape ne cree rien (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          ./install/30-editor.sh --no-extensions
+          [ -e "$HOME/.config/Code/User/settings.json" ] && { echo "cree en l'absence de VSCode"; exit 1; }
+          [ -e "$HOME/.config/VSCodium/User/settings.json" ] && { echo "cree en l'absence de VSCodium"; exit 1; }
+          echo "rien cree, comme attendu"
+
+      - run: ./install/30-editor.sh
+        if: runner.os == 'macOS'
+
+      - name: Le fichier deploye est identique a la source (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          diff config/editor/settings.json \
+            "$HOME/Library/Application Support/VSCodium/User/settings.json"
+          diff config/editor/keybindings.json \
+            "$HOME/Library/Application Support/VSCodium/User/keybindings.json"
+
+      - name: material-icon-theme s'installe vraiment depuis Open VSX (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          codium --install-extension PKief.material-icon-theme --force
+          codium --list-extensions | grep -qi material-icon-theme
+
+  # --------------------------------------------------------------------- #
+  #    Obsidian : coffre factice, aucun plugin tiers deploye              #
+  # --------------------------------------------------------------------- #
+  obsidian:
+    name: 40-obsidian.sh
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Coffre factice
+        run: mkdir -p /tmp/coffre
+
+      - run: ./install/40-obsidian.sh /tmp/coffre
+
+      - name: Reglages deployes, aucun plugin tiers
+        run: |
+          [ -f /tmp/coffre/.obsidian/app.json ] || { echo "app.json absent"; exit 1; }
+          [ -d /tmp/coffre/.obsidian/themes ] || { echo "themes absents"; exit 1; }
+          [ -d /tmp/coffre/.obsidian/plugins ] && { echo "des plugins ont ete deployes a tort"; exit 1; }
+          echo "obsidian : reglages seuls, comme prevu"
+
+  # --------------------------------------------------------------------- #
+  #    Depots externes : les six scenarios verifies a la main lors du dev  #
+  # --------------------------------------------------------------------- #
+  external:
+    name: 50-external.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    env:
+      # Jeton integre a chaque execution : sans ca, une IP de runner GitHub
+      # partagee epuise vite les 60 requetes/heure anonymes. Lecture publique
+      # uniquement, aucun droit d'ecriture requis.
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Premier passage — claude-config (source) partout, halo (binaire) sous Linux seulement
+        run: ./install/50-external.sh --with halo
+
+      - name: claude-config — source extraite, marqueur ecrit
+        run: |
+          [ -f "$HOME/.config/claude-config/README.md" ] || { echo "source non extraite"; exit 1; }
+          [ -f "$HOME/.config/claude-config/.dev-setup-hub-source" ] || { echo "marqueur absent"; exit 1; }
+
+      - name: halo n'est tente que sous Linux (filtre plateforme du manifeste)
+        if: runner.os == 'macOS'
+        run: |
+          [ -e "$HOME/.local/src/halo" ] && { echo "halo n'aurait pas du etre traite sur macOS"; exit 1; }
+          echo "halo correctement ignore sur macOS"
+
+      - name: halo — binaire recupere, verifie, lie (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          [ -x "$HOME/.local/src/halo/halo" ] || { echo "binaire absent ou non executable"; exit 1; }
+          file "$HOME/.local/src/halo/halo" | grep -q ELF || { echo "pas un binaire ELF"; exit 1; }
+          [ -L "$HOME/.local/bin/halo" ] || { echo "symlink ~/.local/bin/halo absent"; exit 1; }
+          grep -q 'release-binaire' "$HOME/.local/src/halo/.dev-setup-hub-source" || {
+            echo "marqueur incorrect, source utilisee au lieu du binaire"; exit 1; }
+
+      - name: Second passage — idempotent, rien ne doit se re-telecharger
+        run: |
+          sortie="$(./install/50-external.sh --with halo)"
+          echo "$sortie"
+          echo "$sortie" | grep -qi 'telechargement' && { echo "un re-telechargement a eu lieu"; exit 1; }
+          echo "idempotent, confirme"
+
+      - name: Bascule de version simulee — sauvegarde puis remplacement
+        run: |
+          printf 'v0.0.0-ancien\trelease-source\n' > "$HOME/.config/claude-config/.dev-setup-hub-source"
+          ./install/50-external.sh
+          ls "$HOME/.config/"claude-config.bak.* >/dev/null 2>&1 || {
+            echo "l'ancien contenu n'a pas ete archive avant remplacement"; exit 1; }
+
+      - name: Repli Git quand un depot n'a jamais publie de release
+        run: |
+          printf 'sans-release | https://github.com/octocat/Hello-World | %s/sans-release | all | on |\n' "$HOME" \
+            > /tmp/external-test.conf
+          cp /tmp/external-test.conf external.conf
+          ./install/50-external.sh
+          [ -d "$HOME/sans-release/.git" ] || { echo "le repli Git n'a pas clone"; exit 1; }
+          git checkout -- external.conf
+
+      - name: Somme de controle invalide — echec net, pas de repli silencieux
+        run: |
+          rm -rf "$HOME/.local/src/halo"
+          cp lib/github.sh /tmp/github.sh.bak
+          printf '\ngithub_verify_sha256() { return 1; }\n' >> lib/github.sh
+          if HOME="$HOME" ./install/50-external.sh --with halo; then
+            echo "aurait du echouer sur la somme de controle"; exit 1
+          fi
+          [ -e "$HOME/.local/src/halo/halo" ] && { echo "un binaire non verifie a ete installe"; exit 1; }
+          cp /tmp/github.sh.bak lib/github.sh
+        if: runner.os == 'Linux'
+
+  # --------------------------------------------------------------------- #
+  #    Hook local : la meme barriere que ci.yml, avant meme le commit      #
+  # --------------------------------------------------------------------- #
+  hook:
+    name: Hook pre-commit
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bloque un script dont la syntaxe est reellement invalide
+        run: |
+          echo 'if true; then' > install/98-test-casse.sh
+          resultat=0
+          echo '{"tool_input":{"command":"git commit -m x"}}' \
+            | CLAUDE_PROJECT_DIR="$PWD" .claude/hooks/lint-shell.sh || resultat=$?
+          rm -f install/98-test-casse.sh
+          [ "$resultat" -eq 2 ] || { echo "le hook n'a pas bloque (code $resultat)"; exit 1; }
+
+      - name: Laisse passer un commit sur un depot sain
+        run: |
+          echo '{"tool_input":{"command":"git commit -m x"}}' \
+            | CLAUDE_PROJECT_DIR="$PWD" .claude/hooks/lint-shell.sh
+
+  # --------------------------------------------------------------------- #
+  #    Bout en bout : l'orchestrateur complet, deux fois de suite          #
+  # --------------------------------------------------------------------- #
+  full:
+    name: install.sh --yes — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    needs: [packages, shell, header, obsidian, external]
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Identite factice, pour que 20-header.sh ne s'arrete pas faute d'adresse
+        run: |
+          mkdir -p "$HOME/.config/dev-setup-hub"
+          printf 'HUB_USER="ci"\nHUB_MAIL="ci@example.org"\n' \
+            > "$HOME/.config/dev-setup-hub/identity"
+
+      - name: Premier passage complet
+        run: ./install.sh --yes
+
+      - name: Second passage — doit rester silencieux sur ce qui est deja en place
+        run: ./install.sh --yes
+
+      - name: Le bilan final est lisible et ne signale aucune anomalie bloquante
+        run: ./install/99-summary.sh

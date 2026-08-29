@@ -47,22 +47,49 @@ github_owner_repo() {
 		sed -E -e 's#^https?://github\.com/##' -e 's#\.git/?$##' -e 's#/$##'
 }
 
-# gh, s'il est present et authentifie, donne un quota de requetes bien plus
-# large que l'API publique anonyme (60/h). On l'utilise en priorite, sans en
-# faire une dependance : curl reste le chemin par defaut.
+# Requetes anonymes : 60/h, partagees par toute l'IP — dans une CI, cette IP
+# est mutualisee entre des milliers d'utilisateurs GitHub Actions, donc bien
+# plus vite epuisee que sur un poste personnel. Deux facons d'authentifier,
+# dans l'ordre :
+#
+#   1. GH_TOKEN / GITHUB_TOKEN en variable d'environnement — c'est le jeton
+#      que GitHub Actions injecte automatiquement dans chaque execution ;
+#      aucune configuration a faire, il suffit qu'il soit exporte.
+#   2. gh, si installe et authentifie sur ce poste.
+#
+# 'gh auth status' verifie les identifiants STOCKES (trousseau/fichier de
+# config) et ne voit PAS un GH_TOKEN simplement exporte dans l'environnement
+# — d'ou le test explicite de la variable en premier, sans dependre de gh
+# pour en profiter.
+github__auth_header() {
+	local jeton="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
+	[ -n "$jeton" ] && printf 'Authorization: Bearer %s' "$jeton"
+}
+
 github__via_gh() {
 	has_cmd gh && gh auth status >/dev/null 2>&1
 }
 
 github__get() {
-	local chemin=$1
-	if github__via_gh; then
-		gh api "$chemin" 2>/dev/null
-	else
+	local chemin=$1 auth
+
+	auth="$(github__auth_header)"
+	if [ -n "$auth" ]; then
 		curl -fsSL --max-time "$GITHUB_API_TIMEOUT" \
 			-H 'Accept: application/vnd.github+json' \
+			-H "$auth" \
 			"https://api.github.com/$chemin" 2>/dev/null
+		return
 	fi
+
+	if github__via_gh; then
+		gh api "$chemin" 2>/dev/null
+		return
+	fi
+
+	curl -fsSL --max-time "$GITHUB_API_TIMEOUT" \
+		-H 'Accept: application/vnd.github+json' \
+		"https://api.github.com/$chemin" 2>/dev/null
 }
 
 # --------------------------------------------------------------------------- #

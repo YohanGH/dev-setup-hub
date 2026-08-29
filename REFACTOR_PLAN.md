@@ -1,426 +1,403 @@
-# Analyse & plan de refactorisation — dev-setup-hub
+# Analyse & plan — second tour
 
-> Document de travail, non versionné pour l'instant. À supprimer ou déplacer
-> dans `docs/` une fois la refactorisation terminée.
+> Document de travail. Base : `~/Documents/Dev/TASK.md`, analyse du 2026-08-29,
+> HEAD `c567966` sur `refacto/architecture`.
 >
-> Base : `TASK.md` (~/Documents/Dev/TASK.md) — analyse du 2026-08-29, HEAD `326824d`.
+> Le premier tour (phases 0 à 7, structure du dépôt) est archivé dans
+> [`docs/archive/REFACTOR_PLAN_v1.md`](docs/archive/REFACTOR_PLAN_v1.md).
 
 ---
 
 ## 1. Analyse
 
-### 1.1 Ce qu'est le dépôt aujourd'hui
+### A — Identités en dur (demande 1)
 
-`dev-setup-hub` est un **monorepo par git-subtree** : 5 anciens dépôts repliés via
-`git subtree` (remotes `src_vim`, `src_zsh`, `src_headers`, `src_obsidian`,
-`src_setup`) puis 3 imports récents (`debian/`, `halo/`, `claude/`).
-Pas de `.gitmodules` — ce sont bien des subtrees, pas des sous-modules.
+Trois catégories, de gravité très inégale.
 
-Résultat : 9 répertoires racine, 335 fichiers, ~24 Mo sur disque, ~9,5 Mo de `.git`.
+#### A1 — Le cas grave : `USER` écrasé pour toute la session
 
-```
-dev-setup-hub/
-├── claude/     936K   ← copie figée de YohanGH/claude-config
-├── debian/     232K   ← mini-monorepo qui re-vendorise vim/zsh/header
-├── halo/       312K   ← application Rust, Linux-only
-├── headers/     12K
-├── obsidian/    23M   ← dont 22M de plugins tiers compilés
-├── setup/       28K   ← script macOS cassé
-├── shell/       32K
-├── vim/        132K
-└── vscode/      16K
+`config/zsh/zshrc:164`
+
+```sh
+USER=yohangh
+export USER
 ```
 
-### 1.2 Problèmes identifiés
+Ce n'est pas un défaut cosmétique. `USER` est une variable système lue par
+`ssh`, `git`, `sudo`, les scripts d'installation, et le plugin `stdheader.vim`.
+Le zshrc est **partagé entre les deux postes** et déployé en lien symbolique :
+sur une machine Debian dont le compte ne s'appelle pas `yohangh`, chaque shell
+ment sur l'identité de l'utilisateur.
 
-#### 🔴 P1 — Triple duplication, aucune source de vérité
+C'est exactement le genre de valeur qui doit vivre dans `~/.zsh_local`, non
+versionné — mécanisme déjà en place depuis le premier tour, mais cette ligne
+lui est antérieure et n'a pas été reprise.
 
-L'import de `debian/` a introduit un second exemplaire de configs déjà présentes
-à la racine, parce que `Configuration_Debian` était lui-même un mini-monorepo :
+#### A2 — Domaine de courriel codé en dur dans les scripts
 
-| Config | Copie A | Copie B | Copie C | État |
-|---|---|---|---|---|
-| zsh | `shell/` | `debian/Configuration_zshrc/` | — | **identiques octet pour octet** |
-| header | `headers/` | `debian/Configuration_Header/` | `debian/scripts/assets/stdheader.vim` | A ≡ B, **C diverge** |
-| vim | `vim/` | `debian/Configuration_Vim/` | — | `syntax/` identique, **`.vimrc` diverge** |
-
-Empreintes du header : `a3fee685…` (A et B) vs `a02f7129…` (C).
-
-Conséquence concrète : modifier `shell/zshrc` ne corrige rien sous Debian, car
-`debian/scripts/init_debian.sh` lit dans `debian/Configuration_zshrc/`. Il y a
-littéralement deux vérités pour le `.vimrc` et deux pour le header.
-
-#### 🔴 P2 — L'axe « OS » est modélisé comme un dossier, pas comme une couche
-
-`debian/` est une **plateforme**, mais il est rangé au même niveau que `vim/` et
-`shell/` qui sont des **outils**. Il n'existe aucun `macos/` symétrique : macOS
-vit dans `setup/setup-configs.sh`, à ce même niveau encore.
-
-Deux modèles mentaux s'affrontent dans une seule arborescence. C'est exactement
-ce qui casse au moment de passer en double OS — ta revendication n°4.
-
-#### 🔴 P3 — `setup/setup-configs.sh` est cassé et périmé
-
-- **Bug d'ordre** : `print_tree` est appelée ligne 229, définie ligne 235 →
-  erreur « command not found » sur chacun des 30 dossiers GTD. Le script n'est
-  pas en `set -e`, donc il continue en crachant du bruit.
-- **Shebang inopérant** : `#!/bin/bash` est en **ligne 13**, après le bloc
-  d'en-tête. Le fichier ne fonctionne que lancé explicitement via `bash …`.
-- **`echo "\n ----- \n"`** : sous `bash`, affiche un `\n` littéral. Mélange de
-  `echo` et `echo -e` d'un bout à l'autre.
-- **Boucle** : il clone `Configuration_zshrc` et `Configuration_Vim` **depuis
-  GitHub** — c'est-à-dire les dépôts que dev-setup-hub a justement absorbés. Le
-  hub installe des copies périmées de lui-même.
-- `check_success` teste parfois le `$?` du `echo` qui précède, pas de la commande utile.
-- Il crée une arborescence GTD en dur dans `~/Documents/GTD`, hors sujet pour un
-  setup de dev.
-
-#### 🟠 P4 — Pas de point d'entrée, pas de CI
-
-Aucun `install.sh` à la racine. Le seul orchestrateur est
-`debian/scripts/install.sh` — et il est **bon** : bannière, `confirm()`,
-`log/ok/warn` colorés, étapes numérotées `1/4`. C'est la graine à réutiliser
-pour ta revendication n°7.
-
-Aucun `.github/workflows/` à la racine (il n'y en a que dans `halo/`).
-`CONTRIBUTING.md` référence `profiles/*` et `.env.example` qui n'existent pas.
-
-#### 🟠 P5 — `AUDIT_REPORT.md` est périmé et trompeur
-
-Daté du 2024-12-19. La duplication du README qu'il décrit est corrigée ; les
-références `/profiles/` `/git/` `/containers/` ont disparu du README **mais
-survivent dans `CONTRIBUTING.md`**. Il est antérieur à `debian/`, `halo/` et
-`claude/`. Le garder à la racine induit en erreur.
-
-#### 🟠 P6 — Halo n'a pas sa place ici (et il n'y a pas d'API à appeler)
-
-- C'est une **application Rust**, pas une config : workspace propre, CI propre,
-  `Cargo.lock`, `CLAUDE.md`. 312 Ko qui dériveront en permanence de `YohanGH/Halo`.
-- Elle est **Linux-only** (overlay Wayland/X11), en pré-alpha. Sur macOS c'est
-  du poids mort.
-- **Réponse à ta question sur l'API GitHub : non, pas en l'état.** Vérifié sur
-  `api.github.com/repos/YohanGH/Halo` :
-
-  ```
-  releases : []        tags : []        has_downloads : false
-  ```
-
-  Il n'y a **aucun asset de release à récupérer**. Les seules options à
-  l'installation sont donc :
-  1. `git clone` + `cargo build --release` → nécessite rustup, plusieurs minutes ;
-  2. tarball de `main` via codeload → même problème, il faut compiler ensuite.
-
-  Le vrai « fetch d'un binaire » n'existera qu'une fois un tag posé **et** un
-  workflow de release ajouté en amont dans le dépôt Halo.
-
-#### 🟠 P7 — Obsidian embarque 22 Mo de JS tiers compilé
-
-`obsidian/obsidian/plugins/*/main.js` — excalidraw 4,8 Mo, mind-map 3,9 Mo,
-graph-analysis 3,4 Mo, table-editor 3,2 Mo, full-calendar 2,4 Mo… Ce sont les
-**artefacts de build des projets d'autres personnes**, commités. Ils
-représentent 95 % du poids du dépôt et occupent les 10 premières places du
-classement des blobs de l'historique. Ils font aussi entrer d'autres licences
-dans ton dépôt.
-
-Ta config réelle, elle, tient en quelques Ko : `app.json`, `appearance.json`,
-`hotkeys.json`, `community-plugins.json`.
-
-> **Correction (phase 7)** : j'avais écrit ici que `community-plugins.json`
-> listait les identifiants et qu'Obsidian saurait retélécharger les plugins
-> seul. **C'est faux sur les deux points.** Ce fichier est la liste des plugins
-> *activés*, pas une liste d'installation, et Obsidian n'y cherche rien à
-> télécharger. Il était de surcroît **vide** (`[]`) alors que quatorze plugins
-> étaient présents sur le disque. L'inventaire a donc été relevé depuis les
-> `manifest.json` et consigné dans `config/obsidian/plugins.md` avant
-> suppression.
-
-#### 🟠 P8 — Le découpage de vim est à moitié fait, et les deux moitiés sont déconnectées
-
-C'est ta branche en cours. État exact :
-
-| | `ankama/vim` (branche `refacto/vim-shortcut`) | `dev-setup-hub/vim/` |
+| Fichier | Ligne | Contenu |
 |---|---|---|
-| `.vim.base` | 373 l. | 373 l. — **md5 identique** |
-| `.vim.shortcut` | 374 l. | 374 l. — **md5 identique** |
-| `.vim.functions` | absent | 23 l. (index seul, en cours) |
-| `.vim.builder` | vide | vide, **non suivi par git** |
-| `.vim.plugins` | vide | vide |
-| `vim-builder.sh` | **absent** | présent |
-| `.vimrc` | **absent** | monolithe de 1832 lignes |
-| remote | **aucun** | — |
+| `install/20-header.sh` | 46 | `export MAIL="${USER}@proton.me"` |
+| `debian/scripts/set_header.sh` | 43 | idem |
+| `debian/scripts/set_header.sh` | 60-61 | `g:userName = 'YohanGH'`, `g:mailName = 'YohanGH@proton.me'` |
+| `config/header/set_header.sh` | 32 | `echo "MAIL="$USER@proton.me"" >> ~/.zshrc` |
 
-Le point bloquant : **`.vimrc` ne contient aucun bloc `vim-builder`**. Les
-fragments ne sont donc jamais sourcés — en l'état, le découpage est du code mort
-et le monolithe reste seul actif. `vim-builder.sh` corrigerait ça à sa première
-exécution, mais il n'a jamais tourné sur ce `.vimrc`.
+Le dernier est en prime **mal quoté** : les guillemets imbriqués font que la
+ligne écrite dans `~/.zshrc` n'est pas celle attendue.
 
-À noter : `vim-builder.sh` pose un lien symbolique `~/.vimrc` → dépôt, ce qui est
-exactement ce que demande `ankama/TASK.md` (« liens relatifs sur ma config pour
-avoir une modification en direct »). Le design est bon, il n'est simplement pas
-branché.
+Le login est dynamique (`$USER`), mais le domaine ne l'est pas. Sur un poste
+professionnel, l'adresse à faire figurer dans un en-tête n'est pas la même.
 
-#### 🟡 P9 — `claude/` duplique un dépôt vivant
+#### A3 — En-têtes 42 : ~33 fichiers, et ce n'est pas un défaut
 
-`ankama/claude-config` (remote `YohanGH/claude-config`) est **en avance** sur la
-copie subtree : il contient `templates/enterprise-monorepo/apps/{routes,services,types}`
-que le hub n'a pas. Même problème de dérive que Halo — et tu as déjà tranché :
-tu le veux téléchargé, pas vendorisé.
+`By: YohanGH <YohanGH@proton.me>` apparaît dans une trentaine d'en-têtes. C'est
+une **signature d'auteur dans un fichier versionné**, pas un paramètre
+d'exécution : la rendre dynamique n'aurait pas de sens, l'auteur d'un fichier ne
+change pas selon la machine qui le lit. Je les laisse.
 
-#### 🟡 P10 — Conflit de licence
+Reste `debian/scripts/setup_obsidian.sh`, qui écrit `YohanGH` et `ANKAMA` dans
+les **documents générés** (mentions de droits d'auteur, tableaux). C'est du
+contenu rédigé, pas de la configuration — même raisonnement, on n'y touche pas.
 
-| Fichier | Licence |
+#### Ce que ça appelle
+
+Une source unique d'identité, résolue en cascade :
+
+```
+$HUB_USER / $HUB_MAIL          (variables d'environnement, priorité haute)
+  → ~/.config/dev-setup-hub/identity   (fichier local, non versionné)
+    → git config user.name / user.email
+      → id -un  +  domaine demandé une fois
+```
+
+Note : ton `git config user.email` vaut aujourd'hui
+`151569122+YohanGH@users.noreply.github.com`. C'est l'adresse de confidentialité
+GitHub — utilisable pour signer des commits, pas pour un en-tête de fichier. La
+cascade doit donc pouvoir être surchargée, pas seulement déduite.
+
+---
+
+### B — Co-auteurs Claude dans les commits (demande 2)
+
+**38 commits** portent `Co-Authored-By: Claude`. La répartition change
+radicalement ce qui est possible :
+
+| | Nombre | Statut | Coût du retrait |
+|---|---|---|---|
+| Mes commits du premier tour | **10** | locaux, sur `refacto/architecture` | rebase, sans risque |
+| Commits antérieurs | **28** | **déjà sur `origin/main`** | réécriture d'historique publié |
+
+`main` et `origin/main` sont désormais **synchronisés** — tu as poussé entre nos
+sessions. Les 28 sont donc publiés.
+
+Deux précisions qui pèsent sur la décision :
+
+1. **La plupart des 28 ne viennent pas d'ici.** Ils sont entrés par les imports
+   subtree : historique de `Halo`, de `claude-config`, de `Configuration_Debian`.
+   Les réécrire dans ce dépôt ne change rien aux dépôts amont, où les mêmes
+   commits gardent leur trailer. Le nettoyage serait donc partiel par nature.
+
+2. **Réécrire l'historique publié invalide tous les SHA.** Tout clone existant
+   devient inutilisable sans intervention, et il faut un `push --force`. C'est
+   acceptable si tu es seul sur le dépôt, mais c'est ta décision, pas la mienne.
+
+**Le volet préventif, lui, est simple et sans risque.** `claude-config` fournit
+déjà le réglage :
+
+```json
+{ "includeCoAuthoredBy": false }
+```
+
+Posé dans le `.claude/settings.json` du dépôt, il supprime le trailer sur tous
+les commits **à venir**. C'est ce qui relie cette demande à la suivante, et
+c'est pourquoi il faut le poser **avant** toute réécriture — sinon les commits
+produits pendant le nettoyage réintroduisent ce qu'on retire.
+
+---
+
+### C — Configuration `.claude` du dépôt (demande 3)
+
+`.claude/` existe à la racine mais est **vide**. Rien n'est configuré.
+
+`claude-config` fournit la matière : quatorze documents dans `docs/`, un
+`settings.json` d'exemple, et le plugin `review-gate` comme modèle de hook
+(`PreToolUse` sur `Bash(git commit *)` et sur `Edit|Write`).
+
+Ce qui est réellement utile **pour ce dépôt-ci**, par ordre de valeur :
+
+| Primitive | Pourquoi ici |
 |---|---|
-| `LICENSE` (racine) | **GNU GPL v2** |
-| `debian/LICENSE.md` | MIT |
-| `claude/LICENSE.md` | MIT |
-| `halo/LICENSE` | MIT |
+| `includeCoAuthoredBy: false` | demande 2, volet préventif |
+| `permissions.allow` | ce dépôt vit de commandes en lecture seule répétées — `git status`, `git log`, `bash -n`, `du`, `find`. Les autoriser supprime l'essentiel des interruptions |
+| `permissions.deny` | `~/.zsh_local`, `identity`, `*.kdbx` : les fichiers non versionnés qui contiennent justement ce qu'on a sorti du dépôt |
+| Hook `PreToolUse` sur commit | `shellcheck` + `shfmt -d` avant chaque commit, la même barrière que la CI mais en local |
+| `CLAUDE.md` | la règle qui tient l'architecture : *une étape de `install/` ne teste jamais l'OS*. Elle est dans `docs/ARCHITECTURE.md`, elle doit être là où elle sera lue avant d'écrire du code |
 
-Un même dépôt annonce deux licences incompatibles selon le répertoire. À trancher.
-
-#### 🟡 P11 — Cosmétique et cohérence
-
-- ~~En-têtes 42 avec des dates futures fausses.~~ **Constat erroné** : vérifié
-  le 2026-08-29, aucune date d'en-tête n'est postérieure à ce jour, et le
-  `Created: 2026/07/22` de `debian/` correspond exactement au premier commit du
-  dépôt amont `Configuration_Debian`.
-- **Trois styles d'ASCII art** différents (le `.--.`, le bateau de `CHANGELOG.md`
-  et `List_of_Plugins.md`).
-- `SECURITY.md` est encore enveloppé dans une clôture ` ```md ` parasite
-  (point n°4 de l'audit de 2024, jamais corrigé).
-- Trois adresses e-mail incohérentes : `YohanGH@proton.me` (en-têtes),
-  `smockingart_dm@hotmail.com` (SECURITY), `conduct@your-domain.tld`
-  (CODE_OF_CONDUCT — placeholder jamais remplacé).
-- `setup/README.md` documente un `configs-path.sh` qui n'existe pas, et répète
-  trois fois la même section « Utilisation ».
+Ce qui **ne** sert pas ici : les templates monorepo et spec-driven de
+`claude-config`, taillés pour des projets applicatifs à tickets. Les recopier
+ferait du volume sans usage.
 
 ---
 
-## 2. Architecture cible
+### D — KeePassXC (demande 4)
 
-Le principe directeur : **séparer trois axes qui sont aujourd'hui mélangés.**
+Vérifié sur les deux canaux :
 
-| Axe | Question | Où ça vit |
+| | Paquet | Version | Remarque |
+|---|---|---|---|
+| macOS | cask `keepassxc` | 2.7.12 | fournit aussi le binaire `keepassxc-cli` |
+| Debian | apt `keepassxc` | 2.7.4 (bookworm) · 2.7.10 (trixie, forky) | dans les dépôts officiels |
+
+**Le « bon endroit » est déjà là** : `profiles/macos-cask.list` et
+`profiles/debian.list`. Aucune structure à créer.
+
+Point à signaler : c'est une **exception à la règle posée dans `docs/MANUAL.md`**,
+qui dit que les applications graphiques ne sont pas automatisées sous Debian
+parce qu'elles exigent un dépôt tiers. KeePassXC est dans les dépôts officiels
+Debian — pas de source non vérifiée à ajouter, donc automatisable des deux côtés.
+La documentation devra le dire, sinon la règle a l'air contredite.
+
+Écart de version à connaître : bookworm est à 2.7.4 face à 2.7.12 sur macOS. Le
+format de base est compatible entre ces versions ; une base ouverte par une
+version plus récente reste lisible par l'ancienne tant qu'aucune fonctionnalité
+de format récente n'est utilisée.
+
+---
+
+### E — Outil de rappel de vérifications (demande 5)
+
+C'est la seule demande qui crée quelque chose de neuf. Tu demandes une analyse
+de faisabilité, une pile, une mise en place et la redondance — dans l'ordre.
+
+#### E1 — Faisabilité : oui, et le périmètre est ce qui la rend simple
+
+Le cahier des charges dit **« uniquement sur les dates d'exécution »**. L'outil
+ne lance rien, ne sauvegarde rien, n'analyse rien. Il répond à une seule
+question : *quand ai-je fait ça pour la dernière fois, et est-ce trop vieux ?*
+
+C'est ce périmètre qui évite le piège : un outil qui exécuterait les
+sauvegardes et les mises à jour devrait gérer les droits, les erreurs
+partielles, les reprises. Un outil qui compare des dates tient en un fichier.
+
+#### E2 — Pile : rien de neuf
+
+| Besoin | Choix | Pourquoi |
 |---|---|---|
-| **Quoi** | quels paquets installer | `profiles/*.list` (par OS) |
-| **Comment** | quelles étapes exécuter | `install/*.sh` (agnostique OS) |
-| **Contenu** | mes fichiers de config | `config/*/` (source unique) |
+| Langage | bash + `lib/` existant | `ui.sh` sait déjà afficher des sections et des statuts, `os.sh` sait déjà distinguer les deux OS |
+| État | `${XDG_STATE_HOME:-~/.local/state}/dev-setup-hub/checks.tsv` | le répertoire existe déjà sur ton poste ; XDG sépare l'état de la configuration |
+| Format | TSV `nom<TAB>date-ISO` | pas de dépendance à `jq`, lisible et corrigeable à la main |
+| Déclaration | `checks.conf`, séparateur `\|` | même format qu'`external.conf`, un seul dialecte à connaître dans le dépôt |
 
-L'OS devient une **couche d'abstraction** (`lib/os.sh`) et une **liste de
-paquets**, plus jamais un répertoire. C'est ce qui permet de remonter au global
-tout ce qui est partageable — ta revendication n°10.
+`checks.conf` porterait : nom, libellé, seuil en jours, commande macOS,
+commande Debian. Aucune bibliothèque, aucun démon, aucun service.
 
-```
-dev-setup-hub/
-├── README.md                  # point d'entrée + procédure pas-à-pas
-├── install.sh                 # orchestrateur racine : détecte l'OS, dispatche
-│
-├── lib/                       # bibliothèque shell partagée
-│   ├── ui.sh                  #   bannière, sections, étapes, couleurs
-│   ├── os.sh                  #   detect_os / pkg_install / has_cmd
-│   └── fs.sh                  #   backup / link / ensure_dir
-│
-├── profiles/                  # QUOI — déclaratif, par OS
-│   ├── common.list
-│   ├── macos.list             #   brew
-│   └── debian.list            #   apt
-│
-├── config/                    # CONTENU — source unique, agnostique OS
-│   ├── zsh/                   #   ← shell/ + debian/Configuration_zshrc/
-│   ├── vim/                   #   ← vim/ + debian/Configuration_Vim/   (cf. décision D1)
-│   ├── header/                #   ← headers/ + les 3 copies de stdheader.vim
-│   ├── editor/                #   ← vscode/ — servira VSCode ET VSCodium
-│   └── obsidian/              #   ← JSON seulement, sans les plugins tiers
-│
-├── install/                   # COMMENT — une étape = un fichier
-│   ├── 00-packages.sh
-│   ├── 10-shell.sh
-│   ├── 20-vim.sh
-│   ├── 30-editor.sh           #   vscodium + vscode, config identique
-│   ├── 40-obsidian.sh
-│   ├── 50-external.sh         #   claude-config, halo… (fetch, opt-in)
-│   └── 99-summary.sh
-│
-├── external.conf              # dépôts tiers à récupérer, pas à vendoriser
-│
-├── docs/
-│   ├── ARCHITECTURE.md
-│   ├── MANUAL.md              #   ce qui reste manuel : navigateurs, Cursor
-│   └── archive/AUDIT_REPORT.md
-│
-└── .github/workflows/ci.yml   # shellcheck + shfmt
+#### E3 — Mise en place
+
+Un script à la racine, `check.sh`, frère de `install.sh` — ce n'est pas une
+étape d'installation, c'est un outil récurrent.
+
+```bash
+./check.sh              # etat de tous les controles
+./check.sh --done update   # enregistre "fait aujourd'hui"
 ```
 
-### 2.1 Le manifeste des sources externes
-
-Un seul mécanisme règle trois de tes revendications d'un coup (vim, claude-config,
-halo). Format TSV lisible par un `while read` — pas de dépendance à `yq` :
+Sortie visée, avec l'UI existante :
 
 ```
-# nom            url                                        destination              plateforme  défaut
-claude-config    https://github.com/YohanGH/claude-config    ~/.config/claude-config  all         on
-halo             https://github.com/YohanGH/Halo             ~/.local/src/halo        linux       off
+  ▸ --  Verifications
+  ──────────────────────────────────────────────────────────────
+    ✔  update          il y a 3 j     (seuil 7 j)
+    ▲  analyse         il y a 41 j    (seuil 30 j) — echeance depassee
+       lynis audit system
+    ✖  backup          jamais enregistre
+       tmutil startbackup
 ```
 
-`install/50-external.sh` lit ce fichier, filtre sur la plateforme courante,
-ignore les lignes `off` sauf `--with-<nom>`, et fait un `clone` ou un `pull`
-idempotent. Halo y gagne en prime une étape de build `cargo` explicitement
-optionnelle et annoncée comme longue.
+#### E4 — Redondance : le point le plus intéressant de la demande
 
-### 2.2 L'UI terminal (revendication n°7)
+Un fichier d'état est un point unique de défaillance : il se perd avec le
+`$HOME`, et surtout **il ment**. Il enregistre que *tu as dit* avoir fait la
+chose, pas que la chose ait eu lieu.
 
-`lib/ui.sh` généralise ce que fait déjà `debian/scripts/install.sh`. Rendu visé :
+D'où une seconde source, indépendante : interroger le système lui-même.
 
-```
-╭────────────────────────────────────────────────────────────────╮
-│  DEV-SETUP-HUB                                macOS · arm64    │
-╰────────────────────────────────────────────────────────────────╯
+| Contrôle | Preuve macOS | Preuve Debian |
+|---|---|---|
+| update | `brew outdated` (nombre), `softwareupdate --history` | dernière `Start-Date:` de `/var/log/apt/history.log` |
+| backup | `tmutil latestbackup` | dépend de l'outil utilisé — **à déterminer** |
+| analyse | date du rapport `lynis` | `/var/log/lynis.log` |
 
-  ▸ 1/7  Paquets système
-  ───────────────────────────────────────────────────────────────
-      ✔  git           déjà présent
-      ✔  curl          déjà présent
-      ⬇  htop          installation…
-      ✔  htop          installé
-      ⊘  thefuck       ignoré (optionnel, absent du dépôt)
+L'outil affiche alors la date déclarée **et** la preuve système, et signale la
+divergence. C'est ça, la redondance utile : pas deux copies du même fichier,
+mais deux sources indépendantes qui doivent concorder.
 
-  ▸ 2/7  Shell — zsh
-  ───────────────────────────────────────────────────────────────
-      ↩  ~/.zshrc      sauvegardé → ~/.zshrc.bak.20260829-1412
-      ✔  ~/.zshrc      déployé
-```
+**Ce que ça donne déjà sur ton poste, mesuré aujourd'hui :**
 
-API : `ui_banner`, `ui_section "2/7" "Shell — zsh"`, `ui_ok`, `ui_warn`,
-`ui_skip`, `ui_run`, `ui_confirm`. Dégradation propre si `NO_COLOR` est défini
-ou si la sortie n'est pas un TTY.
+- `brew outdated` → **57 paquets en retard** ;
+- `tmutil latestbackup` → **« Failed to mount destination »**. Ta destination
+  Time Machine ne se monte pas : la sauvegarde ne tourne pas.
+
+L'outil aurait donc de quoi parler dès sa première exécution — ce qui valide
+au passage son utilité.
+
+**Inconnue à lever** : quel outil de sauvegarde sous Debian ? Time Machine n'a
+pas d'équivalent, et sans le savoir je ne peux pas écrire la preuve système de
+ce côté.
 
 ---
 
-## 3. Plan d'exécution
+### F — VSCode / VSCodium sans extensions (demande 6)
 
-**Règles de travail** (issues de `TASK.md`) :
-- une pause après chaque phase, tu valides avant la suivante ;
-- **aucun commit de ma part** — je prépare, tu commites ;
-- travail sur une branche dédiée, jamais sur `main`.
+Audit des dépendances actuelles de `config/editor/settings.json` :
 
-### Phase 0 — Filet de sécurité
-- Poser un tag `pre-refacto` sur `main`.
-- Créer la branche `refacto/architecture`.
-- Traiter les 3 fichiers en attente : `obsidian/obsidian/.DS_Store` (supprimé,
-  à confirmer + ajouter au `.gitignore`), `vim/.vim.functions` (modifié),
-  `vim/.vim.builder` (non suivi).
-- Aucun changement de structure.
+| Réglage | Dépend de | État |
+|---|---|---|
+| `gitlens.*` (×3) | `eamodio.gitlens` | déclarée |
+| `multiCommand.commands` | `ryuta46.multi-command` | déclarée |
+| `editor.defaultFormatter` dans `[html]` `[css]` `[javascript]` `[javascriptreact]` `[c]` | `esbenp.prettier-vscode` | déclarée |
+| `workbench.colorTheme` / `iconTheme` | `ajshortt.tokyo-hack`, `PKief.material-icon-theme` | déclarées |
+| `cmake.configureOnOpen` | extension CMake | **orpheline** — jamais déclarée |
+| `cSpell.*` (dans `[css]` et `[markdown]`) | correcteur orthographique | **orpheline** — jamais déclarée |
 
-### Phase 1 — Socle : `lib/` + UI terminal → revendication 7
-- `lib/ui.sh`, `lib/os.sh`, `lib/fs.sh`.
-- `.github/workflows/ci.yml` : shellcheck + shfmt.
-- Aucun changement de comportement : on pose les fondations et on les teste seules.
+Deux réglages pilotent donc des extensions qui ne sont installées nulle part.
 
-### Phase 2 — Déduplication : création de `config/` → problèmes P1, P2
-- `shell/` + `debian/Configuration_zshrc/` → `config/zsh/` (identiques, fusion triviale).
-- `headers/` + `debian/Configuration_Header/` + `debian/scripts/assets/` →
-  `config/header/`. Je te présenterai le diff de la 3ᵉ copie divergente avant de trancher.
-- `vim/` + `debian/Configuration_Vim/` → `config/vim/` (**D1**), puis
-  régénération du `.vimrc` par `vim-builder.sh` et arbitrage du monolithe.
-- `vscode/` → `config/editor/`.
-- `obsidian/` → `config/obsidian/`.
-- Suppression de `debian/Configuration_*`.
-- Utilisation de `git mv` pour préserver l'historique.
+#### Ce que l'éditeur sait faire seul
 
-### Phase 3 — Orchestrateur racine + profils → revendications 3, 4, 10
-- `install.sh` racine avec détection d'OS.
-- `profiles/{common,macos,debian}.list` construits à partir de
-  `~/Documents/Dev/ankama/README.md`, **navigateurs et Cursor exclus**
-  (revendication n°5) et renvoyés vers `docs/MANUAL.md`.
-- `install/00-packages.sh` … `install/40-obsidian.sh`, qui remplacent à la fois
-  `setup/setup-configs.sh` et `debian/scripts/init_debian.sh`.
-- Les bugs de P3 disparaissent par remplacement. L'arborescence GTD devient une
-  étape optionnelle explicite, ou saute — à confirmer.
+La démarche est la même que celle que tu as appliquée à vim — une base sans
+greffons — et elle est réaliste, parce que VSCode a absorbé la plupart de ces
+fonctions :
 
-### Phase 4 — Sources externes → revendications 1, 2, 6
-- `external.conf` + `install/50-external.sh`.
-- Retrait des subtrees `halo/` et `claude/`.
-- Halo : Linux uniquement, opt-in, clone + build, avec le constat « pas de
-  release » écrit noir sur blanc dans la doc. En parallèle, note de suivi pour
-  ajouter un workflow de release en amont dans `YohanGH/Halo` — c'est ce qui
-  débloquera le vrai fetch d'un binaire plus tard.
-- Vim n'est **pas** concerné : il reste dans le hub (D1).
+| À remplacer | Par |
+|---|---|
+| `esbenp.prettier-vscode` | formateurs intégrés `vscode.html-language-features`, `vscode.css-language-features`, `vscode.typescript-language-features`, `vscode.json-language-features` |
+| `ryuta46.multi-command` | commande **`runCommands`**, intégrée depuis VSCode 1.77, écrite précisément pour rendre ces extensions inutiles |
+| `gitlens.*` | `git.*` et `scm.*` intégrés, plus l'annotation de blâme intégrée des versions récentes |
+| Bracket Pair Colorizer | déjà intégré depuis 1.60 — l'extension avait été retirée au premier tour |
+| `cmake.*`, `cSpell.*` | rien : réglages orphelins, à supprimer |
 
-### Phase 5 — VSCodium + VSCode à l'identique → revendication 8
-- `config/editor/settings.json` + `keybindings.json`, source unique.
-- `install/30-editor.sh` déploie vers les deux, sur les deux OS :
+**Ce qui reste irréductiblement une extension : les thèmes.** Un thème de
+couleurs et un thème d'icônes ne peuvent pas être intégrés. Trois issues :
+garder ces deux-là comme seule exception assumée, basculer sur un thème livré
+avec l'éditeur (`Default Dark Modern`), ou accepter que VSCodium diverge.
 
-  | | VSCode | VSCodium |
-  |---|---|---|
-  | macOS | `~/Library/Application Support/Code/User/` | `~/Library/Application Support/VSCodium/User/` |
-  | Debian | `~/.config/Code/User/` | `~/.config/VSCodium/User/` |
-
-- `config/editor/extensions.list` → `code --install-extension` /
-  `codium --install-extension`, avec les identifiants complets de la marketplace
-  (l'actuel `List_of_Plugins.md` ne donne que des noms affichables, inutilisables
-  en CLI — il faut les résoudre).
-
-### Phase 6 — Documentation et gouvernance → revendication 9
-- README racine : procédure complète, commandes une par une, et le mode
-  « tout d'un coup ».
-- `docs/MANUAL.md` : navigateurs (Safari, Chrome, Brave) et Cursor, avec liens
-  et raison de leur exclusion de l'automatisation.
-- `docs/ARCHITECTURE.md` : les trois axes, où ajouter quoi.
-- Corrections P11 : clôture parasite de `SECURITY.md`, e-mails harmonisés,
-  placeholder du CODE_OF_CONDUCT, `setup/README.md` réécrit.
-- **`.editorconfig`** : il impose `indent_style = space` / `indent_size = 2` à
-  tous les fichiers, alors que **tous** les scripts shell du dépôt sont en
-  tabulations (`init_debian.sh` 53 lignes, `vim-builder.sh` 62, `install.sh` 17).
-  Ajouter une section `[*.sh] indent_style = tab`, conforme au défaut de shfmt
-  et à ce que la CI vérifie déjà.
-- Licence : passage en **MIT** à la racine (**D2**), suppression des
-  `LICENSE.md` redondants des sous-arbres.
-- `AUDIT_REPORT.md` → `docs/archive/`.
-- `CONTRIBUTING.md` réécrit (suppression des références fantômes).
-
-### Phase 7 — Nettoyage final
-- Plugins Obsidian : retrait du HEAD, historique préservé (**D3**), plus les
-  motifs `.gitignore` qui empêchent leur retour.
-- En-têtes 42 : normalisation d'un style unique, correction des dates futures.
-- `CHANGELOG.md` → 3.0.0.
-- Suppression de ce fichier `REFACTOR_PLAN.md`.
+À vérifier au moment de l'écriture, pas maintenant : le nom exact du réglage de
+blâme intégré varie selon la version de VSCode, et je ne veux pas l'affirmer de
+mémoire.
 
 ---
 
-## 4. Décisions tranchées (2026-08-29)
+## 2. Plan d'exécution
 
-### D1 — Vim vit dans le hub, en `config/vim/`
-Source unique dans `dev-setup-hub`. `ankama/vim` est supprimé une fois ses
-fragments reportés — il n'apporte rien que le hub n'ait déjà (`.vim.base` et
-`.vim.shortcut` y sont identiques au bit près), et il lui manque `vim-builder.sh`,
-le `.vimrc` et un remote.
+Mêmes règles qu'au premier tour : une pause après chaque phase, et je ne commite
+que sur ton accord.
 
-Conséquences à traiter en phase 2 :
-- reporter `.vim.functions` (23 l., en cours côté hub) et terminer le découpage ;
-- **régénérer `.vimrc` via `vim-builder.sh`** pour que les fragments soient enfin
-  sourcés — sans ça le découpage reste du code mort (P8) ;
-- statuer sur les 1832 lignes du monolithe : ce qui n'est pas encore réparti
-  dans `.vim.base` / `.vim.shortcut` / `.vim.functions` / `.vim.plugins` part
-  soit dans les fragments, soit dans `docs/archive/vimrc-legacy.vim`.
+L'ordre n'est pas arbitraire — la phase 8 doit précéder la 9, sinon les commits
+produits pendant le nettoyage réintroduisent le trailer qu'on retire.
 
-Vim n'apparaît donc **pas** dans `external.conf` : celui-ci ne servira qu'à
-`claude-config` et `halo`.
+### Phase 8 — `.claude` du dépôt → demande 3, et volet préventif de la 2
+- `.claude/settings.json` : `includeCoAuthoredBy: false`, permissions en lecture
+  seule pour les commandes courantes, `deny` sur `~/.zsh_local`, le fichier
+  d'identité et `*.kdbx`.
+- `CLAUDE.md` à la racine : la règle « une étape ne teste jamais l'OS », le style
+  shell (tabulations, bash), et où va quoi.
+- Hook `PreToolUse` sur `Bash(git commit *)` : `shellcheck` + `shfmt -d` sur la
+  portée de `LINT_PATHS`.
+- Aucun changement fonctionnel au dépôt.
 
-### D2 — MIT partout
-La racine s'aligne sur les trois sous-arbres déjà en MIT. Le `LICENSE` GPL v2 de
-18 Ko est remplacé par le texte MIT ; `debian/LICENSE.md`, `claude/LICENSE.md` et
-`halo/LICENSE` disparaissent avec leurs sous-arbres ou sont fusionnés.
-À traiter en phase 6.
+### Phase 9 — Co-auteurs → demande 2
+- Retrait du trailer sur les **10 commits locaux** : `git rebase` sur
+  `origin/main`, sans risque puisque rien n'est publié.
+- Les **28 publiés** : selon **décision D1** ci-dessous.
+- Vérification qu'aucun trailer ne subsiste dans la portée traitée.
 
-### D3 — Obsidian : retrait du HEAD seulement
-`obsidian/obsidian/plugins/*/main.js` et `styles.css` sortent du HEAD ; le
-checkout passe de 23 Mo à ~1 Mo. **L'historique n'est pas réécrit** — le `.git`
-reste à ~9,5 Mo, aucun SHA ne change, aucun clone n'est invalidé.
+### Phase 10 — Identité dynamique → demande 1
+- `lib/identity.sh` : cascade `$HUB_USER`/`$HUB_MAIL` → `~/.config/dev-setup-hub/identity`
+  → `git config` → `id -un`.
+- **Retrait de `USER=yohangh` du `zshrc`** — c'est le correctif qui compte.
+- `install/20-header.sh` et les `set_header.sh` consomment la cascade au lieu du
+  domaine codé en dur ; correction du quoting cassé de `config/header/set_header.sh`.
+- En-têtes 42 et contenus rédigés : inchangés, cf. A3.
 
-On conserve `app.json`, `appearance.json`, `hotkeys.json`, `core-plugins.json`,
-`community-plugins.json` et les thèmes maison.
+### Phase 11 — KeePassXC → demande 4
+- Une ligne dans `profiles/macos-cask.list`, une dans `profiles/debian.list`.
+- Note dans `docs/MANUAL.md` expliquant pourquoi c'est l'exception qui confirme
+  la règle des applications graphiques Debian.
 
-> **Correction (phase 7)** : `community-plugins.json` est la liste des plugins
-> **activés**, pas une liste d'installation — et elle était vide. Obsidian ne
-> réinstalle rien tout seul. L'inventaire des 14 plugins a donc été relevé dans
-> `config/obsidian/plugins.md` avant suppression des binaires. Ajout des motifs correspondants au `.gitignore` pour
-éviter que les plugins ne reviennent. À traiter en phase 7.
+### Phase 12 — Éditeur sans extensions → demande 6
+- Réécriture de `config/editor/settings.json` sur les seules capacités intégrées.
+- `multiCommand.makeRoom` → `runCommands`, dans `settings.json` et dans le
+  raccourci `alt+1` de `keybindings.json`.
+- Suppression des réglages orphelins `cmake.*` et `cSpell.*`.
+- `extensions.list` réduit selon **décision D2**.
+- Vérification que les deux fichiers restent du JSONC valide — c'est ce contrôle
+  qui avait révélé les trois virgules manquantes au premier tour.
+
+### Phase 13 — Outil de rappel → demande 5
+- `checks.conf`, `check.sh`, et `lib/checks.sh` pour la lecture d'état.
+- Deux sources : fichier d'état **et** preuve système, avec signalement des
+  divergences.
+- Sous réserve de **décision D3** pour la preuve de sauvegarde côté Debian.
+- Documentation dans `docs/` et renvoi depuis `99-summary.sh`.
+
+---
+
+## 3. Décisions tranchées (2026-08-29)
+
+### D1 — Les 38 commits, y compris les 28 publiés
+
+Le trailer est retiré partout. Cela impose un `push --force` sur `main`, change
+tous les SHA et invalide les clones existants — acceptable puisque tu es seul
+sur le dépôt.
+
+Deux limites à garder en tête, elles ne disparaissent pas avec la décision :
+
+- le nettoyage reste **partiel** : les mêmes commits gardent leur trailer dans
+  `Halo`, `claude-config` et `Configuration_debian_ubuntu`, qui sont les dépôts
+  d'origine ;
+- le `push --force` sera **reconfirmé au moment de l'exécution** en phase 9.
+  Réécrire une branche publiée est irréversible pour quiconque l'a clonée, et
+  ça ne se lance pas au fil de l'eau.
+
+### D2 — Thèmes gardés comme exception assumée
+
+`ajshortt.tokyo-hack` et `PKief.material-icon-theme` restent dans
+`extensions.list`. « Sans extensions » porte sur les **fonctionnalités** —
+formatage, git, séquences de commandes — pas sur l'apparence, qu'aucun éditeur
+ne peut fournir sans extension.
+
+Conséquence inchangée depuis le premier tour : `tokyo-hack` n'étant pas sur
+Open VSX, VSCodium gardera son thème par défaut. Le contournement reste dans
+`docs/MANUAL.md`.
+
+### D3 — Sauvegarde : projet Rust + planificateur par OS
+
+L'intention est un projet Rust piloté par systemd. **Précision nécessaire :
+`systemd` et `systemctl` n'existent pas sur macOS**, qui utilise `launchd`.
+Un service systemd ne peut donc pas mutualiser les deux postes.
+
+Ce qui se mutualise et ce qui ne se mutualise pas :
+
+| Couche | Partageable ? |
+|---|---|
+| Logique de sauvegarde (binaire Rust) | **oui** — un seul code, deux cibles de compilation |
+| Déclenchement périodique | **non** — unité `systemd` + timer sous Debian, `plist` `launchd` sous macOS |
+| État et journal | **oui** — même format, même emplacement XDG |
+
+Trois voies possibles, à trancher en phase 13 et non maintenant :
+
+1. **`cron`** — le seul planificateur commun aux deux OS. Le moins élégant, le
+   plus portable, zéro code.
+2. **Deux unités, un binaire** — systemd timer d'un côté, launchd de l'autre,
+   générés par une étape `install/`. C'est la voie propre.
+3. **Aucun planificateur** — `check.sh` lancé à la main, et c'est justement ce
+   que demande le cahier des charges : *rappeler*, pas exécuter.
+
+Tant que le projet Rust n'existe pas, la preuve système du contrôle « backup »
+côté Debian reste à définir ; le contrôle fonctionnera sur la date déclarée
+seule, donc sans redondance de ce côté.
+
+### Précision sur la demande 1
+
+Les adresses figurant dans les **en-têtes 42** sont hors périmètre : c'est une
+signature d'auteur, elle est voulue. Seuls sont concernés les **scripts et leurs
+routines d'initialisation** — c'est-à-dire A1 et A2 de l'analyse, pas A3.

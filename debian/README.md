@@ -92,7 +92,6 @@ préciser une destination :
 Configuration_Debian/
 ├── README.md              # Ce fichier
 ├── SECURITY.md            # Politique de sécurité (norme GitHub)
-├── LICENSE.md             # Licence MIT
 ├── CHANGELOG.md           # Journal des modifications
 ├── .gitignore             # Ignore les fichiers sensibles
 ├── scripts/
@@ -117,4 +116,4 @@ le fichier `AI-SECURITY.md` généré à sa racine.
 
 ## Licence
 
-Code sous licence **MIT** — voir [`LICENSE.md`](LICENSE.md).
+Code sous licence **MIT** — voir [`../LICENSE`](../LICENSE) a la racine du depot.

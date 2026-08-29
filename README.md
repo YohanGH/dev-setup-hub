@@ -1,15 +1,20 @@
-# Unified Dev Configs
+# dev-setup-hub
 
-**One repo to hold all my dev environment configs — past, present, evolving.**  
+**One repo holding every dev environment config, for two machines: macOS and
+Debian/Ubuntu.**
+
+The OS is detected, never chosen. The same command sets up either machine, and
+the same config file serves both.
 
 ## Why
-- Centralise historical configs into a single evolving environment
-- Make onboarding/rebuilds deterministic (fresh laptop = 30 min)
-- Document opinions and trade-offs as practices mature
+
+- Centralise configs that used to live in five separate repos
+- Make a rebuild deterministic — fresh laptop to working setup in one pass
+- Keep one source of truth per tool, so fixing a config fixes it everywhere
+
+---
 
 ## Quickstart
-
-Works the same on macOS and Debian/Ubuntu — the OS is detected, not chosen.
 
 ```bash
 git clone https://github.com/YohanGH/dev-setup-hub.git
@@ -17,46 +22,138 @@ cd dev-setup-hub
 ./install.sh
 ```
 
-Each step asks before it runs. To see them without installing anything:
+Every step asks before it runs. Nothing is overwritten without being archived
+first as `<file>.bak.<timestamp>`.
+
+| Option | Effect |
+|---|---|
+| `--list`, `-l` | list the steps, install nothing |
+| `--yes`, `-y` | run everything without asking |
+| `--only <n>` | run only the step whose name starts with `<n>` |
+| `--help`, `-h` | usage |
+
+**On macOS, install Homebrew first** — its installer needs a confirmation and
+the Xcode command line tools, so this repo points at it rather than running it
+for you:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+---
+
+## Step by step
+
+Every step is a standalone script. Run them in any order, re-run them freely —
+they are idempotent, and a second run reports what is already in place instead
+of redoing it.
+
+See what exists first:
 
 ```bash
 ./install.sh --list
 ```
 
-Every step is also runnable on its own, in any order:
+**1 — System packages.** Reads `profiles/`, installs through brew or apt
+depending on the machine. On macOS it also installs the GUI apps listed in
+`profiles/macos-cask.list`.
+
+```bash
+./install/00-packages.sh
+```
+
+**2 — Shell.** oh-my-zsh, powerlevel10k, the two zsh plugins, then links
+`~/.zshrc` and `~/.zsh_aliases` to `config/zsh/`. Editing the repo is enough
+afterwards — no reinstall.
 
 ```bash
 ./install/10-shell.sh
 ```
 
-| Option | Effect |
-|---|---|
-| `--yes` | run every step without asking |
-| `--list` | list the steps, install nothing |
-| `--only 10` | run only the step whose name starts with `10` |
+**3 — Node.** nvm, the current Node LTS, prettier.
 
-Browsers are deliberately **not** installed, and neither is Cursor, which
-manages its own updates — see [docs/MANUAL.md](docs/MANUAL.md) for those and
-for the Debian GUI apps.
+```bash
+./install/15-node.sh
+```
+
+**4 — Vim header.** Links the 42-style `stdheader.vim` into `~/.vim/plugin/`.
+Insert a header with `F1` or `:Stdheader`.
+
+```bash
+./install/20-header.sh
+```
+
+**5 — Editors.** Copies the same `settings.json`, `keybindings.json` and
+extension list into **both** VSCode and VSCodium.
+
+```bash
+./install/30-editor.sh
+./install/30-editor.sh --no-extensions   # config only
+```
+
+**6 — Obsidian.** Needs the path to your vault, since that is per-machine.
+Deploys the settings only — Obsidian re-downloads the community plugins from
+`community-plugins.json` on its own.
+
+```bash
+./install/40-obsidian.sh ~/path/to/vault
+```
+
+**7 — External repos.** Clones the repos declared in `external.conf` instead of
+vendoring them here. `halo` is Linux-only and off by default because building
+it needs a full Rust toolchain.
+
+```bash
+./install/50-external.sh
+./install/50-external.sh --with halo
+```
+
+**8 — Check.** Read-only. Reports what is installed, what is linked, and what
+is left for you to do by hand.
+
+```bash
+./install/99-summary.sh
+```
+
+---
 
 ## What’s inside
 
-Three axes, kept separate on purpose:
+Three axes, kept separate on purpose — see
+[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 
-- **/profiles/**: *what* to install — package lists, one per OS
-- **/install/**: *how* — one file per step, OS-agnostic
-- **/config/**: *the content* — your actual config, one directory per tool
-  - **zsh/**, **editor/**, **header/**, **obsidian/**
-- **/lib/**: shared shell helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh`.
-  `os.sh` is the only place that knows macOS from Debian.
+| Path | Role |
+|---|---|
+| `profiles/` | **what** to install — package lists, one per OS |
+| `install/` | **how** — one file per step, never branches on the OS |
+| `config/` | **the content** — `zsh/`, `editor/`, `header/`, `obsidian/` |
+| `lib/` | shared helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh` |
+| `external.conf` | repos that stay in their own project and get cloned |
 
-- **external.conf**: repos that stay in their own GitHub project and get
-  cloned at install time — never copied in here, where they would drift
+Adding a step means dropping a file in `install/`: it registers itself.
 
 Still being folded in:
 
-- **/vim/**: moves under `config/` once its split into fragments is finished
-- **/debian/**: legacy scripts, kept as a working fallback until the new
-  install path is validated on a real Debian box
+- `vim/` — moves under `config/` once its split into fragments is finished
+- `debian/` — legacy scripts, kept as a working fallback until the new path is
+  validated on a real Debian box
 
-> A restructuring is in progress — see [REFACTOR_PLAN.md](REFACTOR_PLAN.md).
+## Not automated
+
+Browsers and Cursor are deliberately left out, and the Debian GUI apps each
+need their own third-party repo. All of it, with the reasoning and the manual
+commands, is in [docs/MANUAL.md](docs/MANUAL.md).
+
+## Documentation
+
+| | |
+|---|---|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the three axes, where to add what *(FR)* |
+| [docs/MANUAL.md](docs/MANUAL.md) | what stays manual, and why *(FR)* |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | conventions, shell style, adding a step |
+| [SECURITY.md](SECURITY.md) | what this repo downloads and runs |
+| [REFACTOR_PLAN.md](REFACTOR_PLAN.md) | the ongoing restructuring *(FR)* |
+
+## License
+
+[MIT](LICENSE).

@@ -1,3 +1,15 @@
+> **Document archivé — conservé pour mémoire, ne reflète plus le dépôt.**
+>
+> Audit du 2024-12-19, antérieur aux imports `debian/`, `halo/` et `claude/`
+> et à la refactorisation d'août 2026. La plupart de ses constats ont été
+> traités ; ceux qui restaient valides ont été repris dans
+> [`../../REFACTOR_PLAN.md`](../../REFACTOR_PLAN.md).
+>
+> Il décrit une arborescence (`/vim/`, `/shell/`, `/setup/`, `/headers/`,
+> `/obsidian/`, `/vscode/`) qui n'existe plus : tout est passé sous `config/`.
+
+---
+
 # Audit du Repository - dev-setup-hub
 
 **Date:** 2024-12-19  

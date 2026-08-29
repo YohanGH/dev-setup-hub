@@ -1,6 +1,6 @@
 /* ******************************************************************************* */
 /*                                                                                 */
-/*  Vim VSCode Parameters.json                                                     */
+/*  settings.json                                                                 */
 /*                                                                                 */
 /*  By: YohanGH <[Your Email]>            __...--~~~~~-._   _.-~~~~~--...__        */
 /*                                       //               `V'               \\     */
@@ -18,7 +18,8 @@
 
     "editor.formatOnSave": false,
     "editor.formatOnPaste": false,
-    "editor.occurrencesHighlight": false,
+    // Attendait un booleen jusqu'a VSCode 1.85, une chaine depuis.
+    "editor.occurrencesHighlight": "off",
     "editor.acceptSuggestionOnCommitCharacter": false,
     "editor.linkedEditing": true,
     "editor.renderWhitespace": "trailing",
@@ -75,21 +76,21 @@
 // --- Workbench
 /* ---------------------------------------------------------------- */
 
-    "workbench.tree.indent": 15
+    "workbench.tree.indent": 15,
     "workbench.tree.renderIndentGuides": "always",
     "workbench.editor.enablePreview": false,
     "workbench.iconTheme": "material-icon-theme",
 
+    // Tokyo Hack (ajshortt.tokyo-hack) n'existe que sur le marketplace
+    // Microsoft : VSCodium, qui tire d'Open VSX, ne peut pas l'installer et
+    // retombera sur son theme par defaut. Voir docs/MANUAL.md.
     "workbench.colorTheme": "Tokyo Hack",
-        "workbench.colorCustomizations": {
-            "[Tokyo Hack]": {
-                "editor.selectionHighlightBackground": "#663399"
-                "editor.selectionBackground": "#663399"
-            }
-        },
-        //"workbench.colorTheme": "tokyo"
-        //"workbench.colorTheme":
-        //"workbench.colorTheme":
+    "workbench.colorCustomizations": {
+        "[Tokyo Hack]": {
+            "editor.selectionHighlightBackground": "#663399",
+            "editor.selectionBackground": "#663399"
+        }
+    },
 
 /* ---------------------------------------------------------------- */
 // --- Editor
@@ -115,10 +116,13 @@
             "command": "multiCommand.makeRoom",
             "sequence": [
                 "workbench.action.toggleSidebarVisibility",
-                "Workbench.action.togglesActivityBarVisibility",
+                // Etait "Workbench.action.togglesActivityBarVisibility" :
+                // majuscule initiale et "toggles" au lieu de "toggle", la
+                // commande n'existait pas et la sequence s'arretait la.
+                "workbench.action.toggleActivityBarVisibility"
             ]
         }
-    ]
+    ],
 
 /* ---------------------------------------------------------------- */
 // --- Prettier And Language
@@ -144,7 +148,7 @@
 
     "[c]": {
         "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "editor.wordBasedSuggestions": false,
+        "editor.wordBasedSuggestions": "off",
         "editor.suggest.insertMode": "replace",
         "editor.semanticHighlighting.enabled": true
     },
@@ -154,7 +158,7 @@
             "!Module"
         ],
         "editor.formatOnType": true,
-        "editor.wordBasedSuggestions": false
+        "editor.wordBasedSuggestions": "off"
     },
     "[markdown]": {
         "editor.defaultFormatter": "vscode.markdown-language-features",

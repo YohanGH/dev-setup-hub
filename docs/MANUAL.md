@@ -22,6 +22,44 @@ bénéfice / risque ne justifie pas l'automatisation.
 
 ---
 
+## Le thème Tokyo Hack sous VSCodium
+
+VSCode et VSCodium reçoivent **exactement les mêmes** `settings.json`,
+`keybindings.json` et liste d'extensions. Une seule chose ne peut pas être
+identique, et elle ne dépend pas de nous : les deux éditeurs tirent leurs
+extensions de registres différents.
+
+| Éditeur | Registre |
+|---|---|
+| VSCode | Marketplace Microsoft |
+| VSCodium | [Open VSX](https://open-vsx.org/) |
+
+`ajshortt.tokyo-hack`, le thème référencé par `settings.json`, **n'est publié
+que sur le marketplace Microsoft**. `install/30-editor.sh` le signale et
+poursuit ; VSCodium restera sur son thème par défaut.
+
+Trois façons de s'en sortir :
+
+**1. Installer le `.vsix` à la main** — récupérer le paquet depuis le
+marketplace, puis :
+
+```bash
+codium --install-extension /chemin/vers/tokyo-hack.vsix
+```
+
+**2. Basculer sur un thème présent sur les deux registres.**
+`enkia.tokyo-night` est très proche et disponible partout. Il faut alors
+changer `workbench.colorTheme` et la clé `[Tokyo Hack]` dans
+`config/editor/settings.json`.
+
+**3. Ne rien faire** — VSCodium reste sur son thème par défaut, tout le reste
+de la configuration s'applique normalement.
+
+Les six autres extensions de `config/editor/extensions.list` ont été vérifiées
+présentes sur Open VSX : elles s'installent des deux côtés.
+
+---
+
 ## Applications graphiques sous Debian / Ubuntu
 
 Sous macOS, `install/00-packages.sh` les installe via Homebrew cask

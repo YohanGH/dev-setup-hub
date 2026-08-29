@@ -1,0 +1,71 @@
+/* ******************************************************************************* */
+/*                                                                                 */
+/*  keybindings.json                                                               */
+/*                                                                                 */
+/*  By: YohanGH <[Your Email]>            __...--~~~~~-._   _.-~~~~~--...__        */
+/*                                       //               `V'               \\     */
+/*                                      //                 |                 \\    */
+/*  Created: 2023-11-29 By: YohanGH    //__...--~~~~~~-._  |  _.-~~~~~~--...__\\   */
+/*  Updated: 2026-08-29 By: YohanGH   //__.....----~~~~._\ | /_.~~~~----.....__\\  */
+/*                                   ====================\\|//==================== */
+/*                                                       `---`                     */
+/* ******************************************************************************* */
+
+// Deploye a l'identique dans VSCode et VSCodium par install/30-editor.sh.
+//
+// Rappel de semantique : quand deux regles visent la meme touche, c'est la
+// DERNIERE qui gagne. Un "command" prefixe de '-' supprime les regles qui le
+// precedent.
+
+[
+    // --- Sauvegarde --------------------------------------------------- //
+    // Une seule regle sur ctrl+s. Il y en avait deux : la premiere,
+    // "saveAll", etait morte puisque celle-ci la suivait et l'emportait.
+    {
+        "key": "ctrl+s",
+        "command": "workbench.action.files.saveFiles"
+    },
+    {
+        "key": "ctrl+k s",
+        "command": "-saveAll"
+    },
+
+    // --- Deplacement de lignes ------------------------------------------ //
+    // Il y avait ici une paire qui s'annulait : alt+down etait liee a
+    // moveLinesDownAction, puis la regle suivante la supprimait avec '-'.
+    // Resultat, alt+down ne faisait plus rien. Les deux regles sont retirees,
+    // ce qui rend la touche a son comportement par defaut — deplacer la ligne
+    // vers le bas, exactement ce que la premiere regle cherchait a obtenir.
+
+    // --- Selection ------------------------------------------------------ //
+    {
+        "key": "ctrl+d",
+        "command": "editor.action.smartSelect.expand",
+        "when": "editorTextFocus"
+    },
+    {
+        "key": "ctrl+shift+d",
+        "command": "editor.action.addSelectionToNextFindMatch",
+        "when": "editorFocus"
+    },
+
+    // --- Mise en forme -------------------------------------------------- //
+    {
+        "key": "ctrl+alt+l",
+        "command": "editor.action.formatDocument"
+    },
+
+    // --- Fenetres ------------------------------------------------------- //
+    // Masque barre laterale et barre d'activite d'un coup.
+    // Necessite l'extension ryuta46.multi-command.
+    {
+        "key": "alt+1",
+        "command": "multiCommand.makeRoom"
+    },
+    // Etait "ctrl-t" avec un tiret : VSCode attend un '+' comme separateur,
+    // la regle etait donc ignoree en silence.
+    {
+        "key": "ctrl+t",
+        "command": "workbench.action.terminal.toggleTerminal"
+    }
+]

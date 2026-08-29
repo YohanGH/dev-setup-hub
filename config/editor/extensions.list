@@ -1,0 +1,43 @@
+# Extensions deployees dans VSCode ET VSCodium par install/30-editor.sh.
+#
+# Identifiants complets 'editeur.nom' : c'est ce qu'attend la ligne de
+# commande. L'ancien List_of_Plugins.md ne donnait que les noms affiches,
+# inutilisables par 'code --install-extension'.
+#
+# Syntaxe : un identifiant par ligne. '#' commente, ligne vide ignoree.
+#           '!' en prefixe = optionnel, une absence n'est pas une erreur.
+#
+# DEUX REGISTRES DIFFERENTS
+#   VSCode   tire du marketplace Microsoft.
+#   VSCodium tire d'Open VSX, qui n'a pas tout.
+# Les identifiants ci-dessous ont ete verifies presents sur Open VSX, sauf
+# mention contraire.
+
+# --- Git -------------------------------------------------------------------- #
+eamodio.gitlens
+
+# --- Mise en forme ---------------------------------------------------------- #
+esbenp.prettier-vscode
+
+# --- Web -------------------------------------------------------------------- #
+ritwickdey.LiveServer
+
+# --- Apparence -------------------------------------------------------------- #
+PKief.material-icon-theme
+!vscode-icons-team.vscode-icons
+
+# --- Raccourcis ------------------------------------------------------------- #
+# Fournit multiCommand.makeRoom, utilise par alt+1 dans keybindings.json.
+ryuta46.multi-command
+
+# --- ABSENT D'OPEN VSX ------------------------------------------------------ #
+# ajshortt.tokyo-hack : le theme reference par settings.json n'est publie que
+# sur le marketplace Microsoft. VSCodium ne peut pas l'installer et retombera
+# sur son theme par defaut. Contournement dans docs/MANUAL.md.
+# Alternative disponible sur les deux registres : enkia.tokyo-night
+!ajshortt.tokyo-hack
+
+# --- RETIRE ----------------------------------------------------------------- #
+# Bracket Pair Colorizer figurait dans List_of_Plugins.md. Son auteur l'a
+# deprecie : la fonction est integree a VSCode depuis la 1.60 et s'active par
+# "editor.bracketPairColorization.enabled", vrai par defaut.

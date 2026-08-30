@@ -419,6 +419,68 @@ jobs:
             | CLAUDE_PROJECT_DIR="$PWD" .claude/hooks/lint-shell.sh
 
   # --------------------------------------------------------------------- #
+  #    check.sh : etat jamais/marque, et la preuve systeme de CHAQUE OS    #
+  # --------------------------------------------------------------------- #
+  checks:
+    name: check.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Liste les controles declares
+        run: ./check.sh --list
+
+      - name: Jamais enregistre au premier lancement, la commande suggeree s'affiche
+        run: |
+          sortie="$(./check.sh 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'jamais enregistre' || {
+            echo "aucun controle jamais-enregistre au tout premier lancement"; exit 1; }
+          echo "$sortie" | grep -q './install/00-packages.sh' || {
+            echo "commande suggeree absente pour update"; exit 1; }
+
+      - name: --done puis re-affichage — a jour, plus jamais-enregistre pour ce nom
+        run: |
+          ./check.sh --done update
+          sortie="$(./check.sh 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'il y a 0 j' || {
+            echo "update ne se rapporte pas a jour juste apres --done"; exit 1; }
+
+      - name: --done sur un nom inconnu echoue proprement
+        run: |
+          if ./check.sh --done ce-controle-n-existe-pas 2>/dev/null; then
+            echo "aurait du refuser un nom de controle inconnu"; exit 1
+          fi
+
+      - name: La preuve systeme de CETTE plateforme s'affiche
+        run: |
+          sortie="$(./check.sh 2>&1)"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            echo "$sortie" | grep -qi 'Homebrew en retard\|systeme :' || {
+              echo "aucune preuve macOS visible"; exit 1; }
+          else
+            # Runner Linux frais : ni /var/log/apt/history.log recent ni lynis
+            # installe, donc les deux lignes 'preuve_debian' doivent apparaitre.
+            echo "$sortie" | grep -q "aucune trace d'apt update" || {
+              echo "preuve_debian absente pour update"; exit 1; }
+            echo "$sortie" | grep -q 'aucun rapport lynis' || {
+              echo "preuve_debian absente pour analyse"; exit 1; }
+          fi
+
+      - name: L etat survit a une nouvelle invocation (fichier TSV relu, pas recree)
+        run: |
+          avant="$(./check.sh --list >/dev/null; cat "${XDG_STATE_HOME:-$HOME/.local/state}/dev-setup-hub/checks.tsv")"
+          ./check.sh >/dev/null
+          apres="$(cat "${XDG_STATE_HOME:-$HOME/.local/state}/dev-setup-hub/checks.tsv")"
+          [ "$avant" = "$apres" ] || { echo "l'etat a change sans --done"; exit 1; }
+
+  # --------------------------------------------------------------------- #
   #    Bout en bout : l'orchestrateur complet, deux fois de suite          #
   # --------------------------------------------------------------------- #
   full:

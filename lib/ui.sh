@@ -164,6 +164,13 @@ ui_skip() { ui__line "$UI_C_DIM" "$UI_G_SKIP" "$1" "${2:-}"; }
 ui_run() { ui__line "$UI_C_INFO" "$UI_G_RUN" "$1" "${2:-}"; }
 ui_backup() { ui__line "$UI_C_WARN" "$UI_G_BAK" "$1" "${2:-}"; }
 
+# Meme apparence que ui_err (rouge, ✖) mais sur stdout : pour un etat normal
+# d'une petite machine a etats (ex. "jamais enregistre" a cote de "a jour" /
+# "en retard"), pas pour un echec d'operation. ui_err reste sur stderr
+# ailleurs — 9 appelants s'y fient pour distinguer une vraie panne du reste
+# de la sortie ; les melanger casserait ce contrat.
+ui_missing() { ui__line "$UI_C_ERR" "$UI_G_ERR" "$1" "${2:-}"; }
+
 # Ligne libre, sans glyphe ni libelle cadre.
 ui_info() {
 	printf '    %s%s%s\n' "$UI_C_DIM" "$1" "$UI_C_RESET"

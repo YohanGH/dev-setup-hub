@@ -77,4 +77,6 @@ ui_info 'Navigateurs : voir docs/MANUAL.md (hors installation auto)'
 [ "$(os_id)" = debian ] &&
 	ui_info 'Applications graphiques sous Debian : voir docs/MANUAL.md'
 
+ui_info 'Rappels de maintenance (mises a jour, sauvegarde, audit) :  ./check.sh'
+
 ui_blank

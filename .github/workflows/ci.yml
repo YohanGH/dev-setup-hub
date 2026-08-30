@@ -12,7 +12,7 @@ env:
   # Portee du lint. Elle s'elargit a chaque phase de la refactorisation :
   # debian/scripts/ reste dehors tant qu'il sert de repli valide sous Debian,
   # et entrera ici quand la phase 4 le retirera.
-  LINT_PATHS: "lib install install.sh"
+  LINT_PATHS: "lib install install.sh check.sh"
   SHFMT_VERSION: v3.14.0
 
 jobs:
@@ -55,7 +55,7 @@ jobs:
           for f in $(find $LINT_PATHS -name '*.sh' -print | sort); do
             bash -n "$f" && echo "syntaxe OK  $f"
           done
-          bash -c '. lib/profile.sh; . lib/fs.sh; echo "sourcage OK  os_id=$(os_id)"'
+          bash -c '. lib/profile.sh; . lib/fs.sh; . lib/checks.sh; . lib/github.sh; echo "sourcage OK  os_id=$(os_id)"'
 
       - name: Verifier les profils et le registre des etapes
         run: |

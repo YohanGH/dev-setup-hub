@@ -121,6 +121,20 @@ is left for you to do by hand.
 
 ---
 
+## Maintenance reminders
+
+`check.sh` is a sibling of `install.sh`, not an install step: a recurring
+reminder for updates, backups and security audits, on dates only. It never
+runs an update, a backup or an audit itself — see
+[docs/CHECKS.md](docs/CHECKS.md).
+
+```bash
+./check.sh              # status of every check
+./check.sh --done update   # record "done today"
+```
+
+---
+
 ## What’s inside
 
 Three axes, kept separate on purpose — see
@@ -131,8 +145,9 @@ Three axes, kept separate on purpose — see
 | `profiles/` | **what** to install — package lists, one per OS |
 | `install/` | **how** — one file per step, never branches on the OS |
 | `config/` | **the content** — `zsh/`, `editor/`, `header/`, `obsidian/` |
-| `lib/` | shared helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh` |
+| `lib/` | shared helpers — `ui.sh`, `os.sh`, `fs.sh`, `profile.sh`, `checks.sh` |
 | `external.conf` | repos that stay in their own project — fetched from their latest release, cloned only if they have none |
+| `checks.conf` | maintenance checks read by `check.sh` — dates only, see [docs/CHECKS.md](docs/CHECKS.md) |
 
 Adding a step means dropping a file in `install/`: it registers itself.
 
@@ -154,6 +169,7 @@ commands, is in [docs/MANUAL.md](docs/MANUAL.md).
 |---|---|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | the three axes, where to add what *(FR)* |
 | [docs/MANUAL.md](docs/MANUAL.md) | what stays manual, and why *(FR)* |
+| [docs/CHECKS.md](docs/CHECKS.md) | the maintenance-reminder tool, and why it checks two sources *(FR)* |
 | [CONTRIBUTING.md](CONTRIBUTING.md) | conventions, shell style, adding a step |
 | [SECURITY.md](SECURITY.md) | what this repo downloads and runs |
 | [REFACTOR_PLAN.md](REFACTOR_PLAN.md) | the ongoing restructuring *(FR)* |

@@ -56,14 +56,18 @@ verifier_lien() {
 verifier_lien "$HOME/.zshrc"
 verifier_lien "$HOME/.zsh_aliases"
 
-[ -d "$HOME/.oh-my-zsh" ] &&
-	ui_ok 'oh-my-zsh' 'installe' ||
+if [ -d "$HOME/.oh-my-zsh" ]; then
+	ui_ok 'oh-my-zsh' 'installe'
+else
 	ui_warn 'oh-my-zsh' 'absent'
+fi
 
 # --- Reste a faire a la main ------------------------------------------------ #
 ui_blank
 ui_section "${HUB_STEP:-5/5}" 'A faire a la main'
 
+# shellcheck disable=SC2016 -- texte litteral a copier-coller, pas a executer
+# maintenant : $(command -v zsh) doit rester tel quel dans le message.
 [ "${SHELL:-}" = "$(command -v zsh)" ] ||
 	ui_info 'Definir zsh par defaut :  chsh -s "$(command -v zsh)"'
 

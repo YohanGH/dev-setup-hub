@@ -53,6 +53,8 @@ fi
 
 # PROFILE=/dev/null empeche l'installeur de modifier ~/.zshrc, qui est un lien
 # vers le depot. C'est donc a nous de declarer nvm, dans le fichier local.
+# shellcheck disable=SC2016 -- ecrit tel quel dans ~/.zsh_local, pour que
+# $HOME/$NVM_DIR soient re-evalues par zsh a chaque ouverture de shell.
 fs_append_once "$HOME/.zsh_local" 'NVM_DIR' \
 	'# Node Version Manager, installe par install/15-node.sh.' \
 	'export NVM_DIR="$HOME/.nvm"' \

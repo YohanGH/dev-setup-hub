@@ -153,4 +153,8 @@ else
 fi
 
 ui_blank
-exit 0
+
+# Le code de sortie doit refleter les echecs : sans ca, un pipeline ou un
+# 'full' de CI qui teste ./install.sh --yes ne peut jamais detecter qu'une
+# etape a reellement echoue en dessous.
+[ "$echecs" -eq 0 ]

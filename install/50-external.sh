@@ -286,6 +286,7 @@ recuperer() {
 
 courante="$(plateforme_courante)"
 traites=0
+echecs=0
 
 while IFS='|' read -r nom url dest plateforme defaut build indice; do
 	# Nettoyage des espaces de mise en forme du manifeste.
@@ -310,10 +311,20 @@ while IFS='|' read -r nom url dest plateforme defaut build indice; do
 		continue
 	fi
 
-	recuperer "$nom" "$url" "${dest/#\~/$HOME}" "$build" "$indice" || true
+	# Le || true laisse la boucle continuer sur les AUTRES entrees apres un
+	# echec — mais un echec doit tout de meme se voir dans le code de sortie
+	# du script, sans quoi une somme de controle invalide ou un clone rate
+	# ressortirait en 0 comme si tout s'etait bien passe.
+	if recuperer "$nom" "$url" "${dest/#\~/$HOME}" "$build" "$indice"; then
+		:
+	else
+		echecs=$((echecs + 1))
+	fi
 	traites=$((traites + 1))
 done <"$MANIFESTE"
 
 [ "$traites" -gt 0 ] || ui_info 'Aucun depot a recuperer sur cette plateforme.'
 
 ui_blank
+
+[ "$echecs" -eq 0 ]

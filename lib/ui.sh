@@ -211,8 +211,14 @@ ui__demo() {
 	ui_warn 'autojump' 'absent du depot, a installer a la main'
 	ui_blank
 	ui_section '2/2' 'Shell - zsh'
+	# Les '~' ci-dessous sont du texte de demonstration passe en argument, pas
+	# des chemins que ce code resout : ui_backup/ui_ok/ui_err affichent la
+	# chaine telle quelle, ils n'expandent jamais rien eux-memes.
+	# shellcheck disable=SC2088
 	ui_backup '~/.zshrc' 'sauvegarde -> ~/.zshrc.bak.20260829-141200'
+	# shellcheck disable=SC2088
 	ui_ok '~/.zshrc' 'deploye'
+	# shellcheck disable=SC2088
 	ui_err '~/.zsh_aliases' 'source introuvable'
 	ui_blank
 	ui_info 'Ouvre un nouveau terminal zsh pour recharger la configuration.'

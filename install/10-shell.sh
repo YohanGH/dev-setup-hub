@@ -101,6 +101,9 @@ fs_link "$ZSH_SRC/my-alias-v2.zsh" "$HOME/.zsh_aliases"
 # ~/.zsh_local n'est pas versionne : il recoit ce qui varie d'un poste a
 # l'autre. ~/.local/bin y entre car il porte le lien fd cree sous Debian par
 # 00-packages.sh.
+# shellcheck disable=SC2016 -- ecrit tel quel dans ~/.zsh_local, pour que
+# $HOME/$PATH soient re-evalues par zsh a chaque ouverture de shell, et non
+# figes a la valeur d'aujourd'hui.
 fs_append_once "$HOME/.zsh_local" 'HOME/.local/bin' \
 	'# Reglages propres a cette machine. Charge par ~/.zshrc.' \
 	'export PATH="$HOME/.local/bin:$PATH"'

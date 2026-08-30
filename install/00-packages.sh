@@ -38,6 +38,8 @@ os_require
 if [ "$(pkg_manager)" = brew ] && ! has_cmd brew; then
 	ui_err 'brew' 'Homebrew absent'
 	ui_info 'Installe-le puis relance cette etape :'
+	# shellcheck disable=SC2016 -- texte litteral a copier-coller ; en double
+	# quotes, $() executerait l'installeur Homebrew immediatement.
 	ui_info '  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"'
 	exit 1
 fi

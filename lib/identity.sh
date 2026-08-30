@@ -54,6 +54,9 @@ identity__lire_fichier() {
 
 	[ -r "$IDENTITY_FILE" ] || return 1
 
+	# shellcheck disable=SC1087 -- faux positif : $cle est un scalaire normal,
+	# le [[:space:]] qui le suit est une classe POSIX du pattern sed, pas un
+	# indice de tableau bash.
 	sed -n "s/^[[:space:]]*$cle[[:space:]]*=[[:space:]]*//p" "$IDENTITY_FILE" |
 		head -1 |
 		sed -e 's/^"//' -e "s/^'//" -e 's/"[[:space:]]*$//' -e "s/'[[:space:]]*$//" |

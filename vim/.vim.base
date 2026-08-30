@@ -52,8 +52,8 @@ set nrformats-=octal
 " User for Header automatic
 " --------------------------------------------------------------
 
-let g:userName = 'yregnier'
-let g:mailName = 'yregnier@ankama.com'
+let g:userName = 'example'
+let g:mailName = 'example@example.com'
 
 " --------------------------------------------------------------
 " User interface

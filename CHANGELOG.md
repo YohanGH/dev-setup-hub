@@ -12,6 +12,61 @@
 
 # Changelog
 
+## 3.1.0 — 2026-09-11
+
+### Ajouté
+
+- `install/25-vim.sh` — **il n'existait aucune étape Vim**. `./install.sh`
+  déployait le plugin d'en-tête et rien d'autre ; seul le script de repli
+  `debian/scripts/install_vim.sh` posait un `.vimrc`, depuis sa propre copie.
+  La nouvelle étape lie `~/.vimrc` et les syntaxes au dépôt, installe vim-plug
+  et lance `:PlugInstall`.
+- `checks.conf` : clés `date_macos` / `date_debian`, une sonde qui relève sur
+  la machine la date du dernier passage réel. `check.sh` affiche la plus
+  récente des deux dates — déclarée ou relevée — et dit laquelle.
+- `install/40-obsidian.sh` trouve le coffre tout seul : d'abord les coffres
+  qu'Obsidian enregistre dans `obsidian.json`, puis un balayage de `$HOME`.
+  Le chemin retenu part dans `~/.zsh_local`, la fois suivante ne demande rien.
+- `vim` dans `profiles/common.list` — il n'y figurait pas.
+
+### Corrigé
+
+- **`check.sh` annonçait « jamais enregistré » juste après une mise à jour.**
+  Le fichier d'état ne connaissait que ce qu'on lui avait déclaré avec
+  `--done`, et personne ne le lance après chaque `apt upgrade`.
+- L'audit lynis passait pour absent dès qu'il avait tourné sans `sudo` : la
+  preuve ne regardait que `/var/log/lynis.log`, alors que lynis écrit dans
+  `$HOME` quand il n'est pas privilégié.
+- `lynis show options` réécrit `lynis-report.dat` sans rien auditer. La sonde
+  regarde le journal, pas le rapport, et ignore un journal vide.
+- Sonder Homebrew pouvait déclencher un `brew update` en douce, ce qu'un outil
+  qui promet de ne jamais rien mettre à jour n'a pas le droit de faire :
+  `HOMEBREW_NO_AUTO_UPDATE=1` sur la sonde.
+- La preuve Debian de `update` mesurait la fraîcheur d'un fichier de log, ce
+  que fait désormais la ligne de date. Elle compte maintenant les paquets
+  réellement en retard, comme son équivalent macOS.
+- `checks_evidence` mourait si un bloc de `checks.conf` omettait une clé.
+
+### Modifié
+
+- **« Header 42 » devient « Header Tux »** : le mécanisme vient du `stdheader`
+  de 42, mais l'ASCII art encadré est Tux — « No Pain No Code ».
+- `README.md` : la section « Not automated » disparaît, son contenu vit dans
+  `docs/MANUAL.md` que la table de documentation référence déjà.
+
+### Supprimé
+
+- `docs/archive/AUDIT_REPORT.md`.
+
+### En cours
+
+- `vim/` — le découpage en fragments couvre un peu plus de la moitié du
+  `.vimrc`. `install/25-vim.sh` compte les lignes restantes à chaque
+  exécution et passera de lui-même à `vim-builder.sh` quand il n'y en aura
+  plus. Les charger avant en doublerait une bonne moitié.
+- `debian/Configuration_Vim/` duplique `vim/` : syntaxes identiques au bit
+  près, `.vimrc` différent par un plugin eslint et deux mappings.
+
 ## 3.0.0 — 2026-08-29
 
 Restructuration complète : le dépôt cible désormais macOS **et** Debian/Ubuntu
@@ -61,7 +116,7 @@ depuis une source unique, avec un point d'entrée unique.
   Sa chaîne nvm/Node/prettier survit dans `install/15-node.sh`.
 - Doublons de `debian/` : `Configuration_zshrc/` et `Configuration_Header/`
   étaient identiques au bit près à `shell/` et `headers/`.
-- Variante ANKAMA du header, au profit du 42 d'origine.
+- Variante ANKAMA du header, au profit du Tux d'origine.
 - Sous-arbres `claude/` et `halo/`, désormais dans `external.conf`.
 - 22 Mo de plugins Obsidian tiers — inventaire dans
   `config/obsidian/plugins.md`.

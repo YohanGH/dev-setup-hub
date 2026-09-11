@@ -76,14 +76,26 @@ afterwards — no reinstall.
 ./install/15-node.sh
 ```
 
-**4 — Vim header.** Links the 42-style `stdheader.vim` into `~/.vim/plugin/`.
-Insert a header with `F1` or `:Stdheader`.
+**4 — Vim header.** Links `stdheader.vim` into `~/.vim/plugin/`, the plugin that
+stamps the Tux "No Pain No Code" banner at the top of a file. Insert one with
+`F1` or `:Stdheader`.
 
 ```bash
 ./install/20-header.sh
 ```
 
-**5 — Editors.** Copies the same `settings.json`, `keybindings.json` and
+**5 — Vim.** Links `~/.vimrc` and the syntax files to the repo, installs
+vim-plug and runs `:PlugInstall`. The split of `.vimrc` into fragments is still
+in progress, so the step deploys the current `.vimrc` and says how many lines
+are left to move before `vim-builder.sh` can take over — loading both would
+double half the config.
+
+```bash
+./install/25-vim.sh
+./install/25-vim.sh --no-plugins
+```
+
+**6 — Editors.** Copies the same `settings.json`, `keybindings.json` and
 extension list into **both** VSCode and VSCodium.
 
 ```bash
@@ -91,16 +103,18 @@ extension list into **both** VSCode and VSCodium.
 ./install/30-editor.sh --no-extensions   # config only
 ```
 
-**6 — Obsidian.** Needs the path to your vault, since that is per-machine.
-Deploys the settings only. Community plugins are not versioned here and
-Obsidian does not reinstall them by itself — see
+**7 — Obsidian.** Finds your vault on its own — first from the vaults Obsidian
+itself records, then by scanning `$HOME` — and asks before writing into it.
+Pass a path to skip the search. Deploys the settings only: community plugins
+are not versioned here and Obsidian does not reinstall them by itself, see
 [config/obsidian/plugins.md](config/obsidian/plugins.md) for the inventory.
 
 ```bash
+./install/40-obsidian.sh                 # detects the vault
 ./install/40-obsidian.sh ~/path/to/vault
 ```
 
-**7 — External repos.** Fetches the repos declared in `external.conf` instead
+**8 — External repos.** Fetches the repos declared in `external.conf` instead
 of vendoring them here: a release binary when one matches the platform, else
 the release's source (pinned to that tag, not the moving default branch), else
 a plain clone if the repo has never published a release. `halo` is Linux-only
@@ -112,7 +126,7 @@ tool.
 ./install/50-external.sh --with halo
 ```
 
-**8 — Check.** Read-only. Reports what is installed, what is linked, and what
+**9 — Check.** Read-only. Reports what is installed, what is linked, and what
 is left for you to do by hand.
 
 ```bash
@@ -124,14 +138,19 @@ is left for you to do by hand.
 ## Maintenance reminders
 
 `check.sh` is a sibling of `install.sh`, not an install step: a recurring
-reminder for updates, backups and security audits, on dates only. It never
-runs an update, a backup or an audit itself — see
-[docs/CHECKS.md](docs/CHECKS.md).
+reminder for updates, backups and security audits. It never runs an update, a
+backup or an audit itself — see [docs/CHECKS.md](docs/CHECKS.md).
 
 ```bash
 ./check.sh              # status of every check
 ./check.sh --done update   # record "done today"
 ```
+
+Each check answers two questions from two sources: **when** it last happened —
+either what you recorded with `--done`, or the trace the operation left on the
+machine, whichever is more recent — and **what is behind right now**, probed
+independently. The second date is what keeps an `apt upgrade` from five minutes
+ago from still reading "never recorded".
 
 ---
 
@@ -153,15 +172,12 @@ Adding a step means dropping a file in `install/`: it registers itself.
 
 Still being folded in:
 
-- `vim/` — moves under `config/` once its split into fragments is finished
+- `vim/` — moves under `config/` once its split into fragments is finished.
+  `./install/25-vim.sh` reports how many lines of `.vimrc` are still waiting to
+  move, and switches to `vim-builder.sh` by itself once that count hits zero.
 - `debian/` — legacy scripts, kept as a working fallback until the new path is
-  validated on a real Debian box
-
-## Not automated
-
-Browsers and Cursor are deliberately left out, and the Debian GUI apps each
-need their own third-party repo. All of it, with the reasoning and the manual
-commands, is in [docs/MANUAL.md](docs/MANUAL.md).
+  validated on a real Debian box. `debian/Configuration_Vim/` still duplicates
+  `vim/`; the two differ only by an eslint plugin and two mappings.
 
 ## Documentation
 

@@ -10,9 +10,13 @@
 #                                                     (___)=(___)              #
 #                                                                              #
 # **************************************************************************** #
-# @desc: Header 42 — plugin Vim stdheader
+# @desc: Header Tux — plugin Vim stdheader
 #
-# Etape 3 : header 42 automatique dans Vim.
+# Etape 3 : en-tete Tux automatique dans Vim.
+#
+# Le mecanisme vient du stdheader de 42, mais l'ASCII art encadre est Tux, la
+# mascotte de Linux — « No Pain No Code ». C'est l'en-tete qu'on retrouve en
+# haut de chaque script de ce depot, pas celui de l'ecole.
 #
 # Remplace debian/scripts/set_header.sh, en deployant depuis la copie unique
 # config/header/ au lieu d'une variante propre a Debian.
@@ -30,7 +34,7 @@ HUB_ROOT="$(dirname "$_DIR")"
 
 HEADER_SRC="$HUB_ROOT/config/header/plugin/stdheader.vim"
 
-ui_section "${HUB_STEP:-3/6}" 'Header 42 — plugin Vim'
+ui_section "${HUB_STEP:-3/6}" 'Header Tux — plugin Vim'
 
 [ -f "$HEADER_SRC" ] || ui_die 'stdheader.vim' 'introuvable dans config/header/'
 
@@ -44,7 +48,7 @@ fs_link "$HEADER_SRC" "$HOME/.vim/plugin/stdheader.vim"
 # non versionne — l'identite est propre au poste, le zshrc est partage.
 if identity_verifier_mail; then
 	fs_append_once "$HOME/.zsh_local" 'export MAIL=' \
-		'# Identite utilisee par le header 42 (plugin stdheader.vim).' \
+		'# Identite utilisee par le header Tux (plugin stdheader.vim).' \
 		"export USER=\"$(identity_user)\"" \
 		"export MAIL=\"$(identity_mail)\""
 	ui_ok 'identite' "$(identity_user) <$(identity_mail)>"

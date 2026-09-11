@@ -14,7 +14,7 @@
 
 > Scripts d'installation et de configuration **« clé en main »** pour un
 > nouveau poste **Debian / Ubuntu** : outils système, shell `zsh`
-> (oh-my-zsh + powerlevel10k), éditeur `vim`, header 42, et génération
+> (oh-my-zsh + powerlevel10k), éditeur `vim`, header Tux, et génération
 > d'un coffre **Obsidian entreprise** `ANKAMA_OBSIDIAN`.
 
 ---
@@ -57,7 +57,7 @@ cd scripts
 
 ./init_debian.sh      # 1. Outils système + zsh + oh-my-zsh + powerlevel10k
 ./install_vim.sh      # 2. Configuration Vim (prettier désactivé par défaut)
-./set_header.sh       # 3. Header 42 (plugin stdheader.vim)
+./set_header.sh       # 3. Header Tux (plugin stdheader.vim)
 ./setup_obsidian.sh   # 4. Génère le coffre Obsidian ANKAMA_OBSIDIAN
 ```
 

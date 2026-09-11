@@ -11,7 +11,7 @@
 #                                                                              #
 # **************************************************************************** #
 #
-# Installe le header 42 (plugin Vim stdheader.vim) et exporte USER / MAIL pour
+# Installe le header Tux (plugin Vim stdheader.vim) et exporte USER / MAIL pour
 # renseigner automatiquement l'en-tête.
 #
 # Usage : ./set_header.sh
@@ -46,7 +46,7 @@ if grep -q '^export MAIL=' "$ZSH_LOCAL"; then
 elif identity_verifier_mail; then
 	{
 		echo ''
-		echo '# Header 42 - identité (ajouté par set_header.sh)'
+		echo '# Header Tux - identité (ajouté par set_header.sh)'
 		echo "export USER=\"$(identity_user)\""
 		echo "export MAIL=\"$(identity_mail)\""
 	} >> "$ZSH_LOCAL"

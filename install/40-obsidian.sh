@@ -15,12 +15,16 @@
 # Etape 4 : configuration Obsidian.
 #
 # Deploie les reglages dans le dossier .obsidian d'un coffre existant. Un
-# coffre est propre a chaque poste, donc son chemin doit etre fourni :
+# coffre est propre a chaque poste : son chemin n'est donc jamais code en dur.
+# L'etape le resout dans cet ordre, et ne s'arrete qu'en dernier recours :
+#
+#   1. l'argument ou HUB_OBSIDIAN_VAULT
+#   2. les coffres qu'Obsidian a lui-meme enregistres dans obsidian.json
+#   3. un balayage de $HOME a la recherche de dossiers .obsidian
+#   4. rien de tout ca -> etape ignoree plutot que d'ecrire au hasard
 #
 #   ./install/40-obsidian.sh ~/Documents/MonCoffre
 #   HUB_OBSIDIAN_VAULT=~/Documents/MonCoffre ./install/40-obsidian.sh
-#
-# Sans chemin, l'etape est ignoree plutot que d'ecrire au hasard.
 #
 set -euo pipefail
 
@@ -34,19 +38,124 @@ VAULT="${1:-${HUB_OBSIDIAN_VAULT:-}}"
 
 ui_section "${HUB_STEP:-4/5}" 'Obsidian'
 
-# --- Coffre cible ----------------------------------------------------------- #
+# --------------------------------------------------------------------------- #
+#    Decouverte des coffres                                                   #
+# --------------------------------------------------------------------------- #
+
+# Le registre d'Obsidian : son chemin depend de l'OS, comme dossier_user()
+# dans 30-editor.sh. Une fonction locale a l'etape, pas un branchement — la
+# difference est un chemin, elle appartient ici et pas a lib/os.sh.
+registres_obsidian() {
+	printf '%s\n' \
+		"$HOME/Library/Application Support/obsidian/obsidian.json" \
+		"$HOME/.config/obsidian/obsidian.json" \
+		"$HOME/.var/app/md.obsidian.Obsidian/config/obsidian/obsidian.json" \
+		"$HOME/snap/obsidian/current/.config/obsidian/obsidian.json"
+}
+
+# Coffres declares par Obsidian lui-meme. C'est la source la plus fiable :
+# l'application y note chaque coffre ouvert. Extraction au grep plutot qu'avec
+# jq — jq est optionnel dans profiles/, et une seule cle est recherchee.
+coffres_declares() {
+	local registre
+	while read -r registre; do
+		[ -r "$registre" ] || continue
+		grep -o '"path"[[:space:]]*:[[:space:]]*"[^"]*"' "$registre" 2>/dev/null |
+			sed -e 's/^"path"[[:space:]]*:[[:space:]]*"//' -e 's/"$//'
+	done < <(registres_obsidian)
+}
+
+# Repli quand le registre est absent ou vide : un coffre est un dossier qui
+# contient .obsidian. Profondeur bornee, et Library / node_modules / dossiers
+# caches elagues — sans quoi le balayage passerait l'essentiel de son temps
+# dans des arborescences ou aucun coffre ne se trouve jamais.
+coffres_trouves() {
+	find "$HOME" -maxdepth 4 \
+		\( -name Library -o -name node_modules -o \( -name '.[!.]*' ! -name .obsidian \) \) -prune \
+		-o -type d -name .obsidian -print 2>/dev/null |
+		while read -r d; do printf '%s\n' "$(dirname "$d")"; done
+}
+
+# Liste dedupliquee des coffres reellement presents sur le disque.
+coffres() {
+	{
+		coffres_declares
+		coffres_trouves
+	} | while read -r c; do
+		[ -n "$c" ] && [ -d "$c" ] && printf '%s\n' "${c%/}"
+	done | awk '!vu[$0]++'
+}
+
+# --------------------------------------------------------------------------- #
+#    Coffre cible                                                             #
+# --------------------------------------------------------------------------- #
+
 if [ -z "$VAULT" ]; then
-	ui_skip 'coffre' 'aucun chemin fourni, etape ignoree'
-	ui_info 'Relance en indiquant ton coffre :'
-	ui_info '  ./install/40-obsidian.sh ~/chemin/vers/le/coffre'
-	ui_blank
-	exit 0
+	candidats=()
+	while IFS= read -r c; do
+		[ -n "$c" ] && candidats+=("$c")
+	done < <(coffres)
+
+	case "${#candidats[@]}" in
+	0)
+		ui_skip 'coffre' 'aucun coffre Obsidian trouve, etape ignoree'
+		ui_info 'Cree ton coffre dans Obsidian, ou indique-le a la main :'
+		ui_info '  ./install/40-obsidian.sh ~/chemin/vers/le/coffre'
+		ui_blank
+		exit 0
+		;;
+	1)
+		# Un seul candidat : on le propose plutot que de l'imposer. Ecrire
+		# dans un coffre, c'est remplacer des reglages existants.
+		ui_ok 'coffre' "$(fs_short "${candidats[0]}")"
+		if ui_confirm "Deployer les reglages dans $(fs_short "${candidats[0]}") ?"; then
+			VAULT="${candidats[0]}"
+		else
+			ui_skip 'coffre' 'refuse, etape ignoree'
+			ui_blank
+			exit 0
+		fi
+		;;
+	*)
+		ui_info 'Plusieurs coffres trouves :'
+		for i in "${!candidats[@]}"; do
+			ui_info "  $((i + 1))) $(fs_short "${candidats[$i]}")"
+		done
+
+		if [ ! -t 0 ]; then
+			ui_skip 'coffre' 'plusieurs candidats et pas de terminal, etape ignoree'
+			ui_blank
+			exit 0
+		fi
+
+		printf '    Lequel ? [1-%d, vide pour ignorer] ' "${#candidats[@]}"
+		read -r choix
+		case "$choix" in
+		'' | *[!0-9]*)
+			ui_skip 'coffre' 'aucun choix, etape ignoree'
+			ui_blank
+			exit 0
+			;;
+		esac
+		if [ "$choix" -lt 1 ] || [ "$choix" -gt "${#candidats[@]}" ]; then
+			ui_die "$choix" 'numero hors liste'
+		fi
+		VAULT="${candidats[$((choix - 1))]}"
+		;;
+	esac
 fi
 
 # Deplie un eventuel ~ non interprete (cas d'une variable d'environnement).
 VAULT="${VAULT/#\~/$HOME}"
+VAULT="${VAULT%/}"
 
 [ -d "$VAULT" ] || ui_die "$(fs_short "$VAULT")" 'coffre introuvable'
+
+# Le chemin du coffre est propre au poste : il va dans ~/.zsh_local, jamais
+# versionne, pour que la prochaine execution n'ait plus rien a demander.
+fs_append_once "$HOME/.zsh_local" 'HUB_OBSIDIAN_VAULT=' \
+	'# Coffre Obsidian cible par ./install/40-obsidian.sh.' \
+	"export HUB_OBSIDIAN_VAULT=\"$VAULT\""
 
 DEST="$VAULT/.obsidian"
 

@@ -1,0 +1,324 @@
+" --------------------------------------------------------------
+" Summary Base config
+" --------------------------------------------------------------
+
+" Index :
+"	- [L-20] General settings
+"	- [L-31] User interface
+"	- [L-34] Syntax and colors
+"	- [L-49] Files and backup
+"	- [L-67] Buffers management
+"	- [L-109] Tab management
+"	- [L-113] Search, vimgrep and grep
+"	- [L-201] Moving around lines
+"	- [L-217] Multiple windows
+"	- [L-240] Tools
+"	- [L-243] Filetype settings
+"	- [L-270] Helper functions
+"
+" --------------------------------------------------------------
+" General settings
+" --------------------------------------------------------------
+
+"
+vnoremap <Leader>z y:call setreg('', ToggleCase(@"), getregtype(''))<CR>gv""Pgv
+vnoremap ~ y:call setreg('', ToggleCase(@"), getregtype(''))<CR>gv""Pgv
+
+" Toggle spell dictionary (ScriptVim)
+nnoremap <silent> <F9> :call <SID>ToggleSpelllang()<CR>
+
+" --------------------------------------------------------------
+" User interface
+" --------------------------------------------------------------
+" --------------------------------------------------------------
+" Syntax and colors
+" --------------------------------------------------------------
+
+" Show syntax highlighting groups (ScriptVim)
+nnoremap <Leader>B :call <SID>SynStack()<CR>
+
+" Show syntax highlighting groups
+function! s:SynStack()
+	if !exists('*synstack')
+		return
+	endif
+	echo map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+endfunction
+
+" --------------------------------------------------------------
+" Files and backup
+" --------------------------------------------------------------
+
+" Rename file (ScriptVim)
+ nnoremap <F2> :call <SID>RenameFile()<CR>
+
+" Rename file
+function! s:RenameFile()
+	let l:old_name = expand('%')
+	let l:new_name = input('New file name: ', expand('%'), 'file')
+	if l:new_name !=# '' && l:new_name !=# l:old_name
+		exec ':saveas ' . l:new_name
+		exec ':silent !rm ' . l:old_name
+		redraw!
+	endif
+endfunction
+
+" --------------------------------------------------------------
+" Buffers management
+" --------------------------------------------------------------
+" Close the current buffer (ScriptVim)
+nnoremap <Leader>bd :call <SID>CustomCloseBuffer()<CR>
+
+" Don't close window when deleting a buffer
+function! s:CustomCloseBuffer()
+	let l:currentBufNum = bufnr('%')
+	let l:alternateBufNum = bufnr('#')
+
+	if buflisted(l:alternateBufNum)
+		buffer #
+	else
+		bnext
+	endif
+
+	if bufnr('%') == l:currentBufNum
+		new
+	endif
+
+	if buflisted(l:currentBufNum)
+		exec ':bdelete! ' . l:currentBufNum
+	endif
+endfunction
+
+" Switch CWD to git root directory (ScriptVim)
+nnoremap <silent> <Leader>dg :call <SID>GitRoot()<CR>
+
+" Switch CWD to git root directory
+function! s:GitRoot() abort
+	execute ':lcd %:p:h'
+	let l:isgit = system('git rev-parse --is-inside-work-tree 2>/dev/null')
+	if v:shell_error == 0
+		let l:path = system('git rev-parse --show-toplevel 2>/dev/null')
+		execute ':lcd ' . l:path
+		execute ':pwd'
+	else
+		echo "You're not in a git directory."
+	endif
+endfunction
+
+" --------------------------------------------------------------
+" Tab management
+" --------------------------------------------------------------
+
+" --------------------------------------------------------------
+" Search, vimgrep and grep
+" --------------------------------------------------------------
+" Highlight the selected text and don't jump to next
+vnoremap <silent> <Leader><CR> :<C-U>call <SID>VSetSearch()<CR>:set hlsearch<CR>
+
+" Highlight the selected text (visual mode)
+" Source: https://github.com/nelstrom/vim-visual-star-search
+" (You can install it as a plugin)
+function! s:VSetSearch()
+	let l:temp = @@
+	norm! gvy
+	let @/ = '\V' . substitute(escape(@@, '\'), '\n', '\\n', 'g')
+	let @@ = l:temp
+endfunction
+
+"
+nnoremap <Leader>al :call <SID>DisplayArgList()<CR>:argument<space>
+
+" Display the arglist vetically
+function! s:DisplayArgList() abort
+	let l:argnum = 0
+	let l:lenargc = len(argc())
+	for l:arg in argv()
+		let l:argnum += 1
+		let l:filename = fnamemodify(l:arg, ':t')
+		let l:changed =
+			\ getbufinfo(bufname('^' . l:arg . '$'))
+			\ [0].changed == 1
+			\ ? '+'
+			\ : ' '
+		let l:current = expand('%') ==# l:arg ? '%' : ' '
+		echo printf( '%-*d %s%s %s',
+					\ l:lenargc, l:argnum, l:current,
+					\ l:changed, l:filename)
+	endfor
+endfunction
+
+" Current buffer (ScriptVim)
+nnoremap <Leader>vv :call <SID>GrepWrapper('grep!', '', '%')<CR>
+
+" Current working directory (ScriptVim)
+nnoremap <Leader>vn :call <SID>GrepWrapper('grep!', '-R
+			\ --exclude-dir={.git,.svn,.jekyll-cache,_site}
+			\ --exclude=LICENSE', '')<CR>
+
+" Current buffer (grepadd) (ScriptVim)
+nnoremap <Leader>vm :call <SID>GrepWrapper('grepadd!', '', '%')<CR>
+
+" Current arglist
+nnoremap <Leader>va :call <SID>GrepWrapper('grep!', '', '##')<CR>
+
+" Grep wrapper
+function! s:GrepWrapper(cmd, dir, scope) abort
+	cclose
+	let l:pattern = substitute(@/, '\\V', '', '')
+	let l:pattern = substitute(pattern, '\\<', '', '')
+	let l:pattern = substitute(pattern, '\\>', '', '')
+	let l:pattern = escape(pattern, '"')
+	let l:pattern = escape(pattern, '%')
+	let l:pattern = escape(pattern, '#')
+	silent execute a:cmd . ' ' . a:dir . ' "' . l:pattern . '" ' . a:scope
+	redraw!
+	set hlsearch
+	call QFCounter()
+endfunction
+
+" Search into a Visual selection (ScriptVim)
+vnoremap <silent> <Space> :<C-U>call <SID>RangeSearch('/')<CR>
+	\ :if strlen(g:srchstr) > 0
+	\ \|exec '/'.g:srchstr\|endif<CR>n
+vnoremap <silent> ? :<C-U>call <SID>RangeSearch('?')<CR>
+	\ :if strlen(g:srchstr) > 0
+	\ \|exec '?'.g:srchstr\|endif<CR>N
+
+	" Search into a Visual selection
+function! s:RangeSearch(direction)
+	call inputsave()
+	let g:srchstr = input(a:direction)
+	call inputrestore()
+	if strlen(g:srchstr) > 0
+		let g:srchstr = g:srchstr.
+			\ '\%>'.(line("'<")-1).'l'.
+			\ '\%<'.(line("'>")+1).'l'
+	else
+		let g:srchstr = ''
+	endif
+endfunction
+" --------------------------------------------------------------
+" Moving around lines
+" --------------------------------------------------------------
+
+" Color colum (ScriptVim)
+nnoremap <silent> <F10> :call <SID>ToggleColorColumn()<CR>:echo g:f10msg<CR>
+
+" Toggle colorcolumn
+function! s:ToggleColorColumn()
+	if !exists('s:color_column_old') || s:color_column_old == 0
+		let s:color_colum_old = &colorcolumn
+		Windo let &colorcolumn = 0
+	else
+		Windo let &colorcolumn = s:color_column_old
+	endif
+endfunction
+" --------------------------------------------------------------
+" Multiple windows
+" --------------------------------------------------------------
+
+" Toggle resize window (ScriptVim)
+nnoremap <silent> <C-w>f :call <SID>ToggleResize()<CR>
+
+" Toogle maximize window and resize windows
+function! s:ToggleResize() abort
+	if exists('t:zoomed') && t:zoomed
+		execute t:zoom_winrestcmd
+		let t:zoomed = 0
+		echo 'Windows resized.'
+	elseif winnr('$') > 1
+		let t:zoom_winrestcmd = winrestcmd()
+		resize
+		vertical resize
+		let t:zoomed = 1
+		echo 'Window maximized'
+	endif
+endfunction
+
+" A new window starts unzoomed, so the toggle above has a state to read
+" instead of tripping on an undefined t:zoomed the first time it runs.
+augroup VimEnterSetup
+	autocmd!
+	autocmd VimEnter * autocmd WinEnter * let t:zoomed = 0
+augroup END
+
+" --------------------------------------------------------------
+" Tools
+" --------------------------------------------------------------
+" --------------------------------------------------------------
+" Filetype settings
+" --------------------------------------------------------------
+
+"
+nnoremap <silent> <Leader>dt :call <SID>DeleteTrailing()<CR>
+
+" Delete trailing white spaces
+function! s:DeleteTrailing() abort
+	if &modifiable
+		let l:original_cursor = getpos('.')
+		let l:original_mark = getpos("'z")
+
+		" Suppresion spaces end line
+		%s/\s\+$//e
+
+		" Restor spaces end line
+		call setpos('.', l:original_cursor)
+		call setpos("'z", l:original_mark)
+
+		echo 'Trailing white spaces have been removed.'
+		noh
+	else
+		echo 'Buffer not modifiable.'
+	endif
+endfunction
+
+" --------------------------------------------------------------
+" Helper functions
+" --------------------------------------------------------------
+
+" Count grep matches (used by GrepWrapper above)
+function! QFCounter() abort
+	let l:results = len(getqflist())
+	if l:results > 0
+		copen
+	else
+		cclose
+	endif
+	echo 'Found ' . l:results . ' matches.'
+endfunction
+
+" Toggle case (used by the <Leader>z / ~ mappings above)
+function! ToggleCase(str)
+	if a:str ==# toupper(a:str)
+		let l:result = tolower(a:str)
+	elseif a:str ==# tolower(a:str)
+		let l:result = substitute(a:str,'\(\<\w\+\>\)', '\u\1', 'g')
+	else
+		let l:result = toupper(a:str)
+	endif
+	return l:result
+endfunction
+
+" Toggle spell dictionary (used by <F9> above)
+function! <SID>ToggleSpelllang()
+	if (&spelllang =~# '^en')
+		set spelllang=fr
+		echo 'French'
+	elseif (&spelllang =~# '^fr')
+		set spelllang=es
+		echo 'Castellano'
+	elseif (&spelllang =~# '^es')
+		set spelllang=en_us,en_gb
+		echo 'English'
+	endif
+	set spelllang?
+endfunction
+
+" New :windo command to return to the last current window
+" - Default :windo cycles through all the open windows
+" - Use 'Windo' instead of 'windo' to avoid it (used by ToggleColorColumn above)
+command! -nargs=+ -complete=command Windo
+	\ let s:currentWindow = winnr() |
+	\ execute 'windo <args>' |
+	\ exe s:currentWindow . 'wincmd w'
+

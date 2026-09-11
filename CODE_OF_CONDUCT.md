@@ -5,6 +5,6 @@ Be respectful, assume good faith, and focus on technical substance.
 
 Unacceptable behaviour includes harassment, discrimination, and personal attacks.
 
-For issues, contact: conduct@your-domain.tld
+For issues, contact: <YohanGH@proton.me>
 Reference: https://www.contributor-covenant.org/version/2/1/code_of_conduct/
 

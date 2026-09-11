@@ -23,7 +23,10 @@ set -euo pipefail
 # --- Repérage des chemins -------------------------------------------------- #
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_DIR="$(dirname "$SCRIPT_DIR")"
-ZSH_SRC="$REPO_DIR/Configuration_zshrc"
+HUB_ROOT="$(dirname "$REPO_DIR")"
+# La config zsh a quitté debian/Configuration_zshrc/ pour config/zsh/, partagée
+# avec macOS. Ce script est remplacé par install/ en phase 3.
+ZSH_SRC="$HUB_ROOT/config/zsh"
 
 # --- Couleurs / logs ------------------------------------------------------- #
 c_reset='\033[0m'; c_ok='\033[0;32m'; c_info='\033[0;34m'; c_warn='\033[0;33m'

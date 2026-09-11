@@ -30,3 +30,13 @@ __pycache__/
 .devcontainer/volumes/
 docker-data/
 
+
+# Plugins Obsidian : builds JavaScript appartenant a d'autres projets, 22 Mo a
+# eux seuls. Inventaire et procedure de reinstallation dans
+# config/obsidian/plugins.md. Les themes, eux, restent versionnes.
+config/obsidian/obsidian/plugins/
+
+# Bases KeePassXC. Une base de mots de passe n'a rien a faire dans un depot,
+# meme chiffree : elle y resterait pour toujours dans l'historique.
+*.kdbx
+*.kdb

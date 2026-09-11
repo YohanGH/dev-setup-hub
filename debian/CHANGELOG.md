@@ -39,7 +39,7 @@ et le versionnage suit [SemVer](https://semver.org/lang/fr/).
 - `install_vim.sh` : déploie le `.vimrc`, installe **vim-plug** et les
   plugins, copie les fichiers de syntaxe. **Prettier désactivé par défaut**
   (`g:prettier#autoformat = 0`).
-- `set_header.sh` : installe le header 42 personnalisé et exporte
+- `set_header.sh` : installe le header Tux personnalisé et exporte
   `USER` / `MAIL` (version corrigée de l'ancien script).
 - `setup_obsidian.sh` : génère le coffre **ANKAMA_OBSIDIAN**.
 

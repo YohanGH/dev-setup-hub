@@ -1,0 +1,182 @@
+/* ******************************************************************************* */
+/*                                                                                 */
+/*  settings.json                                                                 */
+/*                                                                                 */
+/*  By: YohanGH <YohanGH@proton.me>            __...--~~~~~-._   _.-~~~~~--...__        */
+/*                                       //               `V'               \\     */
+/*                                      //                 |                 \\    */
+/*  Created: 2023-11-29 By: YohanGH    //__...--~~~~~~-._  |  _.-~~~~~~--...__\\   */
+/*  Updated: 2026-08-29 By: YohanGH   //__.....----~~~~._\ | /_.~~~~----.....__\\  */
+/*                                   ====================\\|//==================== */
+/*                                                       `---`                     */
+/* ******************************************************************************* */
+
+// Configuration deployee a l'identique dans VSCode et VSCodium par
+// install/30-editor.sh.
+//
+// PARTI PRIS : aucune fonctionnalite ne depend d'une extension. Tout ce qui
+// suit s'appuie sur les capacites livrees avec l'editeur. Seuls les themes
+// restent des extensions — un theme de couleurs ne peut pas etre integre.
+//
+// Ce que l'editeur fait desormais seul, et qui demandait une extension avant :
+//   - coloration des paires de parentheses  (integree depuis la 1.60)
+//   - sequences de commandes                (runCommands, depuis la 1.77 ;
+//                                            voir keybindings.json)
+//   - formatage html/css/js/json/markdown   (formateurs livres)
+//   - git                                   (git.* et scm.* integres)
+
+{
+/* ---------------------------------------------------------------- */
+// --- Editor
+/* ---------------------------------------------------------------- */
+
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    // Attendait un booleen jusqu'a VSCode 1.85, une chaine depuis.
+    "editor.occurrencesHighlight": "off",
+    "editor.acceptSuggestionOnCommitCharacter": false,
+    "editor.linkedEditing": true,
+    "editor.renderWhitespace": "trailing",
+    "editor.suggest.insertMode": "replace",
+
+    // Remplace l'extension Bracket Pair Colorizer, depreciee par son auteur
+    // quand la fonction est entree dans l'editeur.
+    "editor.bracketPairColorization.enabled": true,
+    "editor.guides.bracketPairs": "active",
+
+/* ---------------------------------------------------------------- */
+// --- Explorer
+/* ---------------------------------------------------------------- */
+
+    "explorer.autoReveal": false,
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+
+/* ---------------------------------------------------------------- */
+// --- Debug
+/* ---------------------------------------------------------------- */
+
+    "debug.onTaskErrors": "showErrors",
+
+/* ---------------------------------------------------------------- */
+// --- Git
+/* ---------------------------------------------------------------- */
+// Il y avait ici trois reglages gitlens.*, qui tous DESACTIVAIENT quelque
+// chose : blame en ligne, code lens, survol. Retirer l'extension rend ces
+// reglages sans objet — le comportement obtenu est deja celui par defaut.
+
+    "git.openRepositoryInParentFolders": "never",
+    "git.confirmSync": false,
+    "git.enableSmartCommit": true,
+    "git.autofetch": true,
+
+/* ---------------------------------------------------------------- */
+// --- Files
+/* ---------------------------------------------------------------- */
+
+    "files.autoSave": "onFocusChange",
+    "files.defaultLanguage": "markdown",
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+
+/* ---------------------------------------------------------------- */
+// --- Emmet
+/* ---------------------------------------------------------------- */
+
+    "emmet.triggerExpansionOnTab": true,
+
+/* ---------------------------------------------------------------- */
+// --- Workbench
+/* ---------------------------------------------------------------- */
+
+    "workbench.tree.indent": 15,
+    "workbench.tree.renderIndentGuides": "always",
+    "workbench.editor.enablePreview": false,
+
+    // Les deux seules extensions conservees : un theme de couleurs et un
+    // theme d'icones n'ont pas d'equivalent integre.
+    // Tokyo Hack (ajshortt.tokyo-hack) n'existe que sur le marketplace
+    // Microsoft : VSCodium, qui tire d'Open VSX, retombera sur son theme
+    // par defaut. Voir docs/MANUAL.md.
+    "workbench.iconTheme": "material-icon-theme",
+    "workbench.colorTheme": "Tokyo Hack",
+    "workbench.colorCustomizations": {
+        "[Tokyo Hack]": {
+            "editor.selectionHighlightBackground": "#663399",
+            "editor.selectionBackground": "#663399"
+        }
+    },
+
+/* ---------------------------------------------------------------- */
+// --- Apparence de l'editeur
+/* ---------------------------------------------------------------- */
+
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
+    "editor.fontLigatures": true,
+    "editor.lineHeight": 28,
+    "editor.fontSize": 16,
+
+/* ---------------------------------------------------------------- */
+// --- Javascript
+/* ---------------------------------------------------------------- */
+
+    "javascript.updateImportsOnFileMove.enabled": "always",
+
+/* ---------------------------------------------------------------- */
+// --- Formateurs par langage
+/* ---------------------------------------------------------------- */
+// Tous integres. Prettier reste installe en global par install/15-node.sh :
+// il s'utilise en ligne de commande ou via une tache, plus comme extension.
+
+    "[html]": {
+        "editor.defaultFormatter": "vscode.html-language-features",
+        "editor.suggest.insertMode": "replace",
+        "editor.formatOnType": true
+    },
+    "[css]": {
+        "editor.defaultFormatter": "vscode.css-language-features",
+        "editor.suggest.insertMode": "replace"
+    },
+    "[scss]": {
+        "editor.defaultFormatter": "vscode.css-language-features"
+    },
+    "[javascript]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features",
+        "editor.maxTokenizationLineLength": 2500
+    },
+    "[javascriptreact]": {
+        "editor.defaultFormatter": "vscode.typescript-language-features"
+    },
+    "[json]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+    "[jsonc]": {
+        "editor.defaultFormatter": "vscode.json-language-features"
+    },
+
+    // Pas de defaultFormatter ici : l'editeur n'en livre aucun pour le C, et
+    // celui qui figurait avant etait esbenp.prettier-vscode — or Prettier ne
+    // sait pas formater le C. Le reglage n'a donc jamais rien fait.
+    "[c]": {
+        "editor.wordBasedSuggestions": "off",
+        "editor.suggest.insertMode": "replace",
+        "editor.semanticHighlighting.enabled": true
+    },
+    "[python]": {
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.formatOnType": true,
+        "editor.wordBasedSuggestions": "off"
+    },
+    "[markdown]": {
+        "editor.defaultFormatter": "vscode.markdown-language-features",
+        "editor.unicodeHighlight.ambiguousCharacters": false,
+        "editor.unicodeHighlight.invisibleCharacters": false,
+        "diffEditor.ignoreTrimWhitespace": false,
+        "editor.wordWrap": "on",
+        "editor.quickSuggestions": {
+            "comments": "off",
+            "strings": "off",
+            "other": "off"
+        }
+    }
+}

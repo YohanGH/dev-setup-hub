@@ -126,6 +126,109 @@ checks_days_since() {
 }
 
 # --------------------------------------------------------------------------- #
+#    Date relevee sur le systeme                                              #
+# --------------------------------------------------------------------------- #
+#
+# Le fichier d'etat ne sait que ce qu'on lui a dit. Lancer `apt upgrade` puis
+# `./check.sh` affichait donc « jamais enregistre » alors que la machine
+# venait d'etre mise a jour. Les fonctions ci-dessous vont chercher la trace
+# que l'operation a reellement laissee sur le disque.
+#
+
+# checks_max_date <date-ISO> <date-ISO> — la plus recente, vides tolerees.
+# Une date ISO se compare comme du texte : son ordre lexical EST son ordre
+# chronologique, c'est tout l'interet du format.
+checks_max_date() {
+	local a=${1:-} b=${2:-}
+
+	[ -n "$a" ] || {
+		printf '%s' "$b"
+		return 0
+	}
+	[ -n "$b" ] || {
+		printf '%s' "$a"
+		return 0
+	}
+
+	if [[ $a > $b ]]; then printf '%s' "$a"; else printf '%s' "$b"; fi
+}
+
+# checks_file_date <fichier> — date ISO de derniere modification, vide si le
+# fichier est absent. stat n'a pas les memes options selon la libc : -f sous
+# BSD/macOS, -c sous GNU/Debian. Seule la mtime est lue, jamais le contenu :
+# /var/log/lynis.log appartient a root en 0640 et reste illisible ici.
+checks_file_date() {
+	local fichier=$1 epoch=''
+
+	[ -e "$fichier" ] || return 0
+
+	epoch="$(stat -f %m "$fichier" 2>/dev/null || stat -c %Y "$fichier" 2>/dev/null || true)"
+	[ -n "$epoch" ] || return 0
+
+	# GNU d'abord, comme checks__epoch. L'ordre inverse aurait un piege : sous
+	# GNU, `date -r` attend un FICHIER de reference, pas un nombre de secondes.
+	# Un fichier nomme comme l'horodatage suffirait a rendre une mauvaise date.
+	# `date -d @N` ne souffre pas de cette ambiguite, et echoue franchement
+	# sous BSD ou l'option n'existe pas.
+	date -d "@$epoch" +%Y-%m-%d 2>/dev/null ||
+		date -r "$epoch" +%Y-%m-%d 2>/dev/null ||
+		true
+}
+
+# checks_newest_date [-s] <fichier>... — la plus recente de leurs mtime.
+# Plusieurs chemins parce qu'un meme evenement laisse des traces differentes
+# selon le contexte : lynis ecrit dans /var/log sous sudo, dans $HOME sinon.
+#
+# -s ignore les fichiers vides, comme le test du meme nom. lynis cree un
+# journal vide au moindre `lynis show options` : sans ce filtre, consulter un
+# reglage suffirait a faire croire qu'un audit a tourne. Par defaut un fichier
+# vide compte quand meme, parce que certains n'existent que pour leur date —
+# /var/lib/apt/periodic/update-success-stamp fait zero octet.
+checks_newest_date() {
+	local fichier date max='' plein=0
+
+	if [ "${1:-}" = '-s' ]; then
+		plein=1
+		shift
+	fi
+
+	for fichier in "$@"; do
+		if [ "$plein" -eq 1 ] && [ ! -s "$fichier" ]; then
+			continue
+		fi
+		date="$(checks_file_date "$fichier")"
+		max="$(checks_max_date "$max" "$date")"
+	done
+
+	printf '%s' "$max"
+}
+
+# checks_detected_date <sortie-de-checks_load>
+# Date du dernier passage REEL, relevee sur la machine. Vide si le controle ne
+# declare pas de sonde pour cette plateforme, ou si elle ne rend pas une date.
+checks_detected_date() {
+	local sortie=$1 cle cmd vue
+
+	case "$(os_id)" in
+	macos) cle=date_macos ;;
+	*) cle=date_debian ;;
+	esac
+
+	cmd="$(checks_field "$sortie" "$cle" 2>/dev/null || true)"
+	[ -n "$cmd" ] || return 0
+
+	vue="$(eval "$cmd" 2>/dev/null || true)"
+
+	# Une sonde qui rend autre chose qu'une date ISO est inexploitable : mieux
+	# vaut ne rien afficher qu'un « il y a ? j ».
+	case "$vue" in
+	[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]) printf '%s' "$vue" ;;
+	esac
+
+	return 0
+}
+
+# --------------------------------------------------------------------------- #
 #    Preuve systeme                                                           #
 # --------------------------------------------------------------------------- #
 
@@ -133,6 +236,9 @@ checks_days_since() {
 # Evalue la commande de preuve de la plateforme courante. Silencieuse = rien
 # a signaler ; sinon imprime la ligne de diagnostic que la commande a rendue.
 # Une preuve absente ou vide n'est pas une erreur : retour vide, silencieux.
+#
+# A ne pas confondre avec checks_detected_date ci-dessus : celle-ci repond
+# « qu'est-ce qui cloche maintenant », celle-la « quand est-ce arrive ».
 checks_evidence() {
 	local sortie=$1 cle cmd
 
@@ -141,8 +247,8 @@ checks_evidence() {
 	*) cle=preuve_debian ;;
 	esac
 
-	cmd="$(checks_field "$sortie" "$cle")"
+	cmd="$(checks_field "$sortie" "$cle" 2>/dev/null || true)"
 	[ -n "$cmd" ] || return 0
 
-	eval "$cmd" 2>/dev/null
+	eval "$cmd" 2>/dev/null || true
 }

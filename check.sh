@@ -113,7 +113,23 @@ while read -r nom; do
 	libelle="$(checks_field "$sortie" libelle)"
 	seuil="$(checks_field "$sortie" seuil)"
 	commande="$(checks_field "$sortie" commande)"
-	derniere="$(checks_last_done "$nom")"
+
+	# Deux sources pour une meme question « c'etait quand ? » :
+	#   - declaree : ce que tu as enregistre avec --done ;
+	#   - detectee : la trace que l'operation a laissee sur la machine.
+	#
+	# La plus recente gagne. Une trace systeme ne peut pas inventer un
+	# evenement qui n'a pas eu lieu, alors que le fichier d'etat, lui, peut
+	# tres bien affirmer une mise a jour qu'on n'a jamais lancee. C'est aussi
+	# ce qui evite le « jamais enregistre » affiche juste apres un apt upgrade.
+	declaree="$(checks_last_done "$nom")"
+	detectee="$(checks_detected_date "$sortie")"
+	derniere="$(checks_max_date "$declaree" "$detectee")"
+
+	origine=''
+	if [ -n "$detectee" ] && [ "$derniere" = "$detectee" ] && [ "$detectee" != "$declaree" ]; then
+		origine=', releve sur le systeme'
+	fi
 
 	if [ -z "$derniere" ]; then
 		ui_missing "$libelle" 'jamais enregistre'
@@ -121,9 +137,9 @@ while read -r nom; do
 	else
 		jours="$(checks_days_since "$derniere")"
 		if [ -n "$jours" ] && [ "$jours" -le "$seuil" ]; then
-			ui_ok "$libelle" "il y a $jours j (seuil $seuil j)"
+			ui_ok "$libelle" "il y a $jours j (seuil $seuil j$origine)"
 		else
-			ui_warn "$libelle" "il y a ${jours:-?} j (seuil $seuil j) — echeance depassee"
+			ui_warn "$libelle" "il y a ${jours:-?} j (seuil $seuil j$origine) — echeance depassee"
 			ui_info "  $commande"
 		fi
 	fi

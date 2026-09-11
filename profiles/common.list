@@ -8,6 +8,7 @@
 git
 curl
 zsh
+vim
 tmux
 tree
 htop
@@ -25,5 +26,6 @@ httpie
 !thefuck
 
 # --- Audit systeme ---------------------------------------------------------- #
-# Cite dans ankama/README.md. Present dans brew et apt sous le meme nom.
+# Sonde par le controle 'analyse' de checks.conf, voir docs/CHECKS.md. Present
+# dans brew et apt sous le meme nom.
 !lynis

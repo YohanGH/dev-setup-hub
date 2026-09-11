@@ -253,6 +253,81 @@ jobs:
           fi
 
   # --------------------------------------------------------------------- #
+  #    Vim : lien, syntaxes, vim-plug — et le garde-fou du builder        #
+  # --------------------------------------------------------------------- #
+  vim:
+    name: 25-vim.sh — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploiement sans les plugins
+        run: ./install/25-vim.sh --no-plugins
+
+      - name: ~/.vimrc et les syntaxes pointent sur le depot, vim-plug est la
+        run: |
+          [ -L "$HOME/.vimrc" ] || { echo "~/.vimrc n'est pas un lien"; exit 1; }
+          [ "$(readlink "$HOME/.vimrc")" = "$PWD/vim/.vimrc" ] || {
+            echo "~/.vimrc ne pointe pas sur le depot"; exit 1; }
+          [ -L "$HOME/.vim/syntax/c.vim" ] || { echo "syntaxe non liee"; exit 1; }
+          [ -f "$HOME/.vim/autoload/plug.vim" ] || { echo "vim-plug absent"; exit 1; }
+          [ -d "$HOME/.vim/backups" ] || { echo "backupdir du .vimrc absent"; exit 1; }
+
+      - name: Tant que le decoupage n'est pas fini, le builder ne tourne pas
+        run: |
+          # Le point de l'etape : charger les fragments EN PLUS d'un .vimrc
+          # encore monolithique doublerait la moitie de la configuration.
+          sortie="$(./install/25-vim.sh --no-plugins 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'fragments non charges' || {
+            echo "le garde-fou du builder ne s'est pas declenche"; exit 1; }
+          if grep -q 'vim-builder' vim/.vimrc; then
+            echo "un bloc genere a ete injecte alors que le decoupage est en cours"; exit 1
+          fi
+
+      - name: Deuxieme execution — idempotente
+        run: |
+          sortie="$(./install/25-vim.sh --no-plugins 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'lien deja en place' || {
+            echo "la seconde execution refait le travail"; exit 1; }
+          echo "$sortie" | grep -q 'vim-plug.*deja present' || {
+            echo "vim-plug est retelecharge a chaque fois"; exit 1; }
+
+      - name: Decoupage simule termine — le builder prend le relais
+        run: |
+          # Depot factice : un .vimrc reduit a un chargeur, quatre fragments.
+          faux="$(mktemp -d)"
+          mkdir -p "$faux/install" "$faux/vim"
+          ln -s "$PWD/lib" "$faux/lib"
+          cp install/25-vim.sh "$faux/install/"
+          cp vim/vim-builder.sh "$faux/vim/"
+          printf '" chargeur\n' > "$faux/vim/.vimrc"
+          for f in .vim.base .vim.shortcut .vim.functions .vim.plugins; do
+            printf '" fragment\nlet g:frag_%s = 1\n' "${f#.vim.}" > "$faux/vim/$f"
+          done
+
+          faux_home="$(mktemp -d)"
+          HOME="$faux_home" "$faux/install/25-vim.sh" --no-plugins
+          grep -q '>>> vim-builder >>>' "$faux/vim/.vimrc" || {
+            echo "le builder n'a pas genere le bloc de chargement"; exit 1; }
+
+          # Deux passes : le bloc ne doit pas s'empiler.
+          HOME="$faux_home" "$faux/install/25-vim.sh" --no-plugins >/dev/null
+          n="$(grep -c '>>> vim-builder >>>' "$faux/vim/.vimrc")"
+          [ "$n" -eq 1 ] || { echo "bloc genere present $n fois"; exit 1; }
+
+          # Et vim charge reellement les quatre fragments.
+          vim -es -u "$faux/vim/.vimrc" -i NONE \
+            -c 'echo g:frag_base . g:frag_shortcut . g:frag_functions . g:frag_plugins' \
+            -c 'qa' </dev/null
+
+  # --------------------------------------------------------------------- #
   #    Editeurs : VSCodium reel sur macOS (cask rapide), config sur Linux  #
   # --------------------------------------------------------------------- #
   editor:
@@ -316,6 +391,49 @@ jobs:
           [ -d /tmp/coffre/.obsidian/themes ] || { echo "themes absents"; exit 1; }
           [ -d /tmp/coffre/.obsidian/plugins ] && { echo "des plugins ont ete deployes a tort"; exit 1; }
           echo "obsidian : reglages seuls, comme prevu"
+
+      - name: Sans coffre nulle part, l'etape est ignoree — elle n'invente rien
+        run: |
+          faux_home="$(mktemp -d)"
+          sortie="$(HOME="$faux_home" ./install/40-obsidian.sh 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'aucun coffre Obsidian trouve' || {
+            echo "aurait du signaler qu'aucun coffre n'a ete trouve"; exit 1; }
+
+      - name: Le coffre declare par obsidian.json est trouve sans qu'on le donne
+        run: |
+          faux_home="$(mktemp -d)"
+          mkdir -p "$faux_home/.config/obsidian" "$faux_home/Ailleurs/Notes/.obsidian"
+          printf '{"vaults":{"a1":{"path":"%s/Ailleurs/Notes","ts":1,"open":true}}}' \
+            "$faux_home" > "$faux_home/.config/obsidian/obsidian.json"
+
+          HOME="$faux_home" UI_ASSUME_YES=1 ./install/40-obsidian.sh
+          [ -f "$faux_home/Ailleurs/Notes/.obsidian/app.json" ] || {
+            echo "le coffre du registre n'a pas ete servi"; exit 1; }
+          # Le chemin retenu est memorise : la fois suivante ne demande rien.
+          grep -q 'HUB_OBSIDIAN_VAULT=' "$faux_home/.zsh_local" || {
+            echo "le coffre retenu n'a pas ete memorise dans ~/.zsh_local"; exit 1; }
+
+      - name: Un coffre non declare est trouve par balayage de $HOME
+        run: |
+          faux_home="$(mktemp -d)"
+          mkdir -p "$faux_home/Documents/Notes/Perso/.obsidian"
+          HOME="$faux_home" UI_ASSUME_YES=1 ./install/40-obsidian.sh
+          [ -f "$faux_home/Documents/Notes/Perso/.obsidian/app.json" ] || {
+            echo "le balayage n'a pas trouve le coffre"; exit 1; }
+
+      - name: Plusieurs coffres et pas de terminal — on n'en choisit aucun
+        run: |
+          faux_home="$(mktemp -d)"
+          mkdir -p "$faux_home/Documents/A/.obsidian" "$faux_home/Documents/B/.obsidian"
+          sortie="$(HOME="$faux_home" ./install/40-obsidian.sh < /dev/null 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'pas de terminal' || {
+            echo "aurait du s'abstenir faute de pouvoir demander"; exit 1; }
+          if [ -f "$faux_home/Documents/A/.obsidian/app.json" ] ||
+             [ -f "$faux_home/Documents/B/.obsidian/app.json" ]; then
+            echo "a ecrit dans un coffre sans qu'on ait choisi"; exit 1
+          fi
 
   # --------------------------------------------------------------------- #
   #    Depots externes : les six scenarios verifies a la main lors du dev  #
@@ -439,18 +557,21 @@ jobs:
         run: |
           sortie="$(./check.sh 2>&1)"
           echo "$sortie"
+          # 'backup' est le seul controle sans sonde de date sur AUCUN des deux
+          # runners : pas de Time Machine sous macOS, pas d'outil choisi sous
+          # Debian. C'est donc le seul dont l'etat jamais-enregistre est sur.
           echo "$sortie" | grep -q 'jamais enregistre' || {
             echo "aucun controle jamais-enregistre au tout premier lancement"; exit 1; }
-          echo "$sortie" | grep -q './install/00-packages.sh' || {
-            echo "commande suggeree absente pour update"; exit 1; }
+          echo "$sortie" | grep -q 'tmutil startbackup' || {
+            echo "commande suggeree absente pour backup"; exit 1; }
 
       - name: --done puis re-affichage — a jour, plus jamais-enregistre pour ce nom
         run: |
-          ./check.sh --done update
+          ./check.sh --done backup
           sortie="$(./check.sh 2>&1)"
           echo "$sortie"
           echo "$sortie" | grep -q 'il y a 0 j' || {
-            echo "update ne se rapporte pas a jour juste apres --done"; exit 1; }
+            echo "backup ne se rapporte pas a jour juste apres --done"; exit 1; }
 
       - name: --done sur un nom inconnu echoue proprement
         run: |
@@ -458,20 +579,62 @@ jobs:
             echo "aurait du refuser un nom de controle inconnu"; exit 1
           fi
 
+      - name: Une trace systeme suffit, sans aucun --done
+        run: |
+          # Le defaut corrige : lancer une mise a jour puis check.sh affichait
+          # encore 'jamais enregistre', faute de regarder ailleurs que dans le
+          # fichier d'etat. Controle bidon dont la sonde pointe un fichier
+          # qu'on vient de creer — aucun --done ne doit etre necessaire.
+          tmp="$(mktemp -d)"
+          touch "$tmp/trace"
+          {
+            echo '[sonde]'
+            echo 'libelle = Controle de test'
+            echo 'seuil = 7'
+            echo 'commande = echo rien-a-lancer'
+            echo "date_macos = checks_file_date \"$tmp/trace\""
+            echo "date_debian = checks_file_date \"$tmp/trace\""
+            echo 'preuve_macos ='
+            echo 'preuve_debian ='
+          } > "$tmp/checks.conf"
+
+          sortie="$(CHECKS_CONF="$tmp/checks.conf" ./check.sh 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'il y a 0 j' || {
+            echo "la date relevee sur le systeme n'a pas ete prise en compte"; exit 1; }
+          echo "$sortie" | grep -q 'releve sur le systeme' || {
+            echo "l'origine systeme de la date n'est pas signalee"; exit 1; }
+          if echo "$sortie" | grep -q 'jamais enregistre'; then
+            echo "jamais-enregistre annonce malgre une trace systeme"; exit 1
+          fi
+
+      - name: Une sonde qui ne rend pas une date ISO est ignoree
+        run: |
+          tmp="$(mktemp -d)"
+          {
+            echo '[sonde]'
+            echo 'libelle = Controle de test'
+            echo 'seuil = 7'
+            echo 'commande = echo rien-a-lancer'
+            echo 'date_macos = echo pas-une-date'
+            echo 'date_debian = echo pas-une-date'
+            echo 'preuve_macos ='
+            echo 'preuve_debian ='
+          } > "$tmp/checks.conf"
+
+          sortie="$(CHECKS_CONF="$tmp/checks.conf" ./check.sh 2>&1)"
+          echo "$sortie"
+          echo "$sortie" | grep -q 'jamais enregistre' || {
+            echo "une sortie de sonde illisible aurait du etre ignoree"; exit 1; }
+
       - name: La preuve systeme de CETTE plateforme s'affiche
         run: |
           sortie="$(./check.sh 2>&1)"
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            echo "$sortie" | grep -qi 'Homebrew en retard\|systeme :' || {
-              echo "aucune preuve macOS visible"; exit 1; }
-          else
-            # Runner Linux frais : ni /var/log/apt/history.log recent ni lynis
-            # installe, donc les deux lignes 'preuve_debian' doivent apparaitre.
-            echo "$sortie" | grep -q "aucune trace d'apt update" || {
-              echo "preuve_debian absente pour update"; exit 1; }
-            echo "$sortie" | grep -q 'aucun rapport lynis' || {
-              echo "preuve_debian absente pour analyse"; exit 1; }
-          fi
+          echo "$sortie"
+          # lynis n'est preinstalle sur aucun des deux runners : sa preuve est
+          # la seule deterministe des deux cotes.
+          echo "$sortie" | grep -q 'lynis absent' || {
+            echo "preuve absente pour analyse"; exit 1; }
 
       - name: L etat survit a une nouvelle invocation (fichier TSV relu, pas recree)
         run: |
@@ -486,7 +649,7 @@ jobs:
   full:
     name: install.sh --yes — ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
-    needs: [packages, shell, header, obsidian, external]
+    needs: [packages, shell, header, vim, obsidian, external]
     strategy:
       fail-fast: false
       matrix:

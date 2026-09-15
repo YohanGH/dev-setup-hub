@@ -28,15 +28,10 @@
     - [vim-gitgutter](https://github.com/airblade/vim-gitgutter)
     - [vim-fugitive](https://github.com/tpope/vim-fugitive)
 
-### Sessions
-
-    - [vim-misc](https://github.com/xolox/vim-misc)
-
 ### Tools
 
     - [nerdcommenter](https://github.com/scrooloose/nerdcommenter)
     - [nerdtree](https://github.com/scrooloose/nerdtree)
-    - [listtoggle](https://github.com/valloric/listtoggle)
     - [tagbar](https://github.com/majutsushi/tagbar)
     - [undotree](https://github.com/mbbill/undotree)
     - [ale](https://github.com/w0rp/ale)
@@ -61,9 +56,9 @@
     - [jspc.vim](https://github.com/othree/jspc.vim)
     - [vim-jsbeautify](https://github.com/maksimr/vim-jsbeautify)
 
-### VimL support
+### TypeScript support
 
-    - [neco-vim](https://github.com/Shougo/neco-vim)
+    - [typescript-vim](https://github.com/leafgarland/typescript-vim)
 
 ### Additional syntax files
 
@@ -83,16 +78,9 @@
     - [vim-repeat](https://github.com/tpope/vim-repeat)
     - [targets.vim](https://github.com/wellle/targets.vim)
     - [vim-expand-region](https://github.com/terryma/vim-expand-region)
-    - [MatchTagAlways](https://github.com/Valloric/MatchTagAlways)
-    - [vim-argwrap](https://github.com/FooSoft/vim-argwrap)
 
 ### Misc
 
-    - [christoomey/vim-tmux-navigator](https://github.com/christoomey/vim-tmux-navigator)
-    - [vim-characterize](https://github.com/tpope/vim-characterize)
-    - [open-browser.vim](https://github.com/tyru/open-browser.vim)
     - [goyo.vim](https://github.com/junegunn/goyo.vim)
-    - [webapi-vim](https://github.com/mattn/webapi-vim)
-    - [emmet-vim](https://github.com/mattn/emmet-vim)
     - [vimwiki](https://github.com/vimwiki/vimwiki)
 

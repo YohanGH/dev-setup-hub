@@ -242,8 +242,6 @@
 - Normal mode
   - `<Leader>h` goes to the previous warning/error.
   - `<Leader>l` goes to the next warning/error.
-  - `<Leader>q` toggles the quickfix window.
-  - `<Leader>e` toggles the location list window.
 
 ### Tools
 - Normal mode
@@ -277,13 +275,11 @@
   - `<Leader>cc` gets the keyword density of a text.
   - `<Leader>B` shows syntax highlighting groups.
   - `<Leader>U` toggles the plugin Undotree.
-  - `<Leader>W` inits ArgWrap plugin.
   - `<Leader>T` uses tgpt; the ouput goes to the buffer.
   - `<Leader>ww` opens the personal vimwiki.
   - `<Leader>we` toggles the status of a vimwiki list item.
   - `gll` increases indentation level of a vimwiki list item.
   - `glh` decreases indentation level of a vimwiki list item.
-  - `<Leader>gl` opens the URL under the cursor in a web browser.
   - `gi` inits the plugin EasyAlign.
 
 - Visual mode

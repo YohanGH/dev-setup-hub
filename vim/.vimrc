@@ -119,9 +119,6 @@ endif
 
 " --- Plugins ---
 " --------------------------------------------------------------
-" -- Prettier
-" packloadall
-" --
 
 call plug#begin('~/.vim/plugged')
 
@@ -136,12 +133,8 @@ call plug#begin('~/.vim/plugged')
 	Plug 'airblade/vim-gitgutter'		" Affiche les modification Git
 	Plug 'tpope/vim-fugitive'		" Intégration Git
 
-	" Sessions
-	Plug 'xolox/vim-misc'	
-	
 	" Tools
 	Plug 'preservim/nerdcommenter', { 'commit': 'a5d1663' }
-	Plug 'valloric/listtoggle'
 	Plug 'majutsushi/tagbar'
 	Plug 'mbbill/undotree'
 	Plug 'dense-analysis/ale'
@@ -159,8 +152,8 @@ call plug#begin('~/.vim/plugged')
 	Plug 'othree/jspc.vim'
 	Plug 'maksimr/vim-jsbeautify'
 
-	" VimL support
-	Plug 'Shougo/neco-vim', { 'commit' : '4c0203b' }
+	" TypeScript support
+	Plug 'leafgarland/typescript-vim'
 
 	" Additional syntax files
 	Plug 'othree/html5.vim'
@@ -178,24 +171,12 @@ call plug#begin('~/.vim/plugged')
 	Plug 'tpope/vim-repeat'
 	Plug 'wellle/targets.vim'
 	Plug 'terryma/vim-expand-region'
-	"Plug 'Valloric/MatchTagAlways' (Python)
-	Plug 'FooSoft/vim-argwrap'
 
 	" Misc
-	"Plug 'christoomey/vim-tmux-navigator'
-	Plug 'tpope/vim-characterize'
-	Plug 'tyru/open-browser.vim'
 	Plug 'junegunn/goyo.vim'
-	"Plug 'mattn/webapi-vim'
-	Plug 'mattn/emmet-vim'
 	"Plug 'vimwiki/vimwiki', { 'branch': 'master' }
 
-	" Prettier
-	Plug 'prettier/vim-prettier', {
-	  \ 'do': 'yarn install --frozen-lockfile --production',
-	  \ 'for': ['javascript', 'typescript', 'css', 'less', 'scss', 'json', 'graphql', 'markdown', 'vue', 'svelte', 'yaml', 'html'] }
-
-	call plug#end()
+call plug#end()
 
 "----------------------------------------------------------------
 " Plugins settings
@@ -268,8 +249,25 @@ let g:ale_linters = {
 	\ 'vim'        : ['vint'],
 	\ 'python'     : ['pylint'],
 	\ 'javascript' : ['jshint'],
+	\ 'typescript' : ['tsserver'],
 	\ 'css'        : ['csslint'],
 	\ }
+
+let g:ale_fixers = {
+	\ '*'          : ['remove_trailing_lines', 'trim_whitespace'],
+	\ 'javascript' : ['prettier'],
+	\ 'typescript' : ['prettier'],
+	\ 'css'        : ['prettier'],
+	\ 'scss'       : ['prettier'],
+	\ 'less'       : ['prettier'],
+	\ 'json'       : ['prettier'],
+	\ 'markdown'   : ['prettier'],
+	\ 'yaml'       : ['prettier'],
+	\ 'html'       : ['prettier'],
+	\ 'vue'        : ['prettier'],
+	\ }
+
+let g:ale_fix_on_save = 1
 
 let g:ale_sign_error='✗'
 let g:ale_sign_warning='∆'
@@ -296,10 +294,6 @@ nnoremap <silent><Leader>uv
 " Navigate between errors
 "nnoremap <Leader>h :lprevious<CR>zz
 "nnoremap <Leader>l :lnext<CR>zz
-
-" Listtoggle settings
-let g:lt_location_list_toggle_map = '<leader>e'
-let g:lt_quickfix_list_toggle_map = '<leader>q'
 
 " Tagbar toggle (custom function)
 nnoremap <silent> <C-t> :call <SID>ToggleTagbar()<CR>
@@ -438,37 +432,8 @@ augroup END
 vmap v <Plug>(expand_region_expand)
 vmap m <Plug>(expand_region_shrink)
 
-" MatchTagAlways settings ()
-"let g:mta_filetypes = {
-"	\ 'html'  : 1,
-"	\ 'xhtml' : 1,
-"	\ 'xml'   : 1,
-"	\ 'jinja' : 1,
-"	\ 'php'   : 1,
-"	\ }
-
-" ArgWrap settings
-let g:argwrap_tail_comma    = 1
-let g:argwrap_padded_braces = '[{'
-
-nnoremap <Leader>W :ArgWrap<CR>
-
 " --- Misc ---
 "----------------------------------------------------------------
-
-" Vim-tmux navigator settings
-"let g:tmux_navigator_no_mappings = 1
-
-" Open-browser settings
-let g:openbrowser_browser_commands = [{
-	\ 'name': 'w3m',
-	\ 'args': 'tmux new-window w3m {uri}',
-	\ }]
-
-nmap <Leader>gl <Plug>(openbrowser-open)
-
-" Type Browser
-let g:openbrowser_browser = 'safari'
 
 " Goyo settings
 let g:goyo_width  = '80'
@@ -752,23 +717,6 @@ nnoremap <silent> <C-w>l :wincmd p<CR>:echo "Last window."<CR>
 nnoremap <silent> <C-w>p :wincmd w<CR>:echo "Previous window."<CR>
 nnoremap <silent> <C-w>n :wincmd W<CR>:echo "Next window."<CR>
 nnoremap <silent> <C-w>o :wincmd o<CR>:echo "Only one window."<CR>
-
-" Move between Vim windows and Tmux panes
-" - It requires the corresponding configuration into Tmux.
-" - Check it at my .tmux.conf from my dotfiles repository.
-" - URL: https://github.com/gerardbm/dotfiles/blob/master/tmux/.tmux.conf
-" - Plugin required: https://github.com/christoomey/vim-tmux-navigator
-"if !has("nvim")
-"	set <M-h>=
-"	set <M-j>=
-"	set <M-k>=
-"	set <M-l>=
-"endif
-
-"nnoremap <silent> <M-h> :TmuxNavigateLeft<CR>
-"nnoremap <silent> <M-j> :TmuxNavigateDown<CR>
-"nnoremap <silent> <M-k> :TmuxNavigateUp<CR>
-"nnoremap <silent> <M-l> :TmuxNavigateRight<CR>
 
 " Remove the Windows ^M - when the encodings gets messed up
 noremap <Leader><BS> mmHmt:%s/<C-v><CR>//ge<CR>'tzt`m
